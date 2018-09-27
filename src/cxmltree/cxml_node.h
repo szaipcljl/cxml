@@ -48,6 +48,8 @@ cxml_node *cxml_node_getChildByTag(cxml_node *node, const char *tag);
 cxml_node **cxml_node_getChildrenByTag(cxml_node *node, const char *tag,
                                        unsigned *nchild);
 
+//TODO add recursive getChildByTag and getChildrenByTag
+
 cxml_node *cxml_node_getRoot(cxml_node *node);
 
 void cxml_node_destroy(void *node);
