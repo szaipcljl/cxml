@@ -104,8 +104,6 @@ cxml_document *cxml_parsefile(cxml_parser *parser, const char *filename)
     free(line);
     fclose(fp);
     CXML_DEBUGF("Closed file: %s", filename);
-    //TODO finalize and return document
-
 
     CXML_DEBUG("Printing frame tree");
     cxml_parser_traverseframetree(parser->rootframe);
