@@ -116,7 +116,7 @@ cxml_document *cxml_parsefile(cxml_parser *parser, const char *filename)
 
     free(parser->buf);
     parser->bufsize = 0;
-    return NULL;
+    return doc;
 }
 
 cxml_document *cxml_parsexml(cxml_parser *parser, const char **xml, size_t lines)
@@ -415,7 +415,7 @@ static void cxml_parser_finalizenodetree(struct cxml_parser_frame *frame,
     struct cxml_node *curparent;
     struct cxml_node *curnode;
 
-    cxml_stack_push(stack, doc->node);
+    cxml_stack_push(stack, doc->docnode);
     cxml_stack_push(stack, frame);
 
     while(!cxml_stack_isempty(stack)){
@@ -426,9 +426,9 @@ static void cxml_parser_finalizenodetree(struct cxml_parser_frame *frame,
         curnode = cxml_node_new(CXML_NODE, curframe->tag, curframe->innerText, curparent);
         if(curparent != NULL){
             if(curparent->type == CXML_DOCUMENT){
-                cxml_document_setroot(doc, curnode);
+                cxml_document_setRoot(doc, curnode);
             }else {
-                cxml_node_appendchild(curparent, curnode);
+                cxml_node_appendChild(curparent, curnode);
             }
         }
 
@@ -438,5 +438,6 @@ static void cxml_parser_finalizenodetree(struct cxml_parser_frame *frame,
             curchild = curchild->next;
         }
     }
+    cxml_stack_destroy(stack);
 }
 

@@ -9,7 +9,14 @@ int main(){
     char filepath[256];
 
     strcat(strcpy(filepath, getenv("HOME")), "/private/gitrepos/cxml/test.xml");
-    cxml_parsefile(parser, filepath);
+    cxml_document *doc = cxml_parsefile(parser, filepath);
+
+    unsigned i;
+    cxml_node **nodes = cxml_node_getChildrenByTag(doc->root, "first", &i);
+    if(nodes != NULL) CXML_DEBUG("OOOOH BABY!");
+    free(nodes);
+
+    cxml_document_destroy(doc);
 
     CXML_DEBUG("Returned from cxml_parsefile");
     cxml_parser_destroy(parser);
