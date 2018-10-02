@@ -11,6 +11,6 @@ int CXmlQueue_isEmpty(CXmlQueue *queue);
 
 void *CXmlQueue_dequeue(CXmlQueue *queue);
 
-#define cxml_queue_destroy(x) free(x)
+#define CXmlQueue_destroy(x) free(x)
 
 #endif /*CXML_QUEUE_H_*/
