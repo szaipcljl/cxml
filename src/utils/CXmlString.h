@@ -33,7 +33,7 @@ CXmlString *CxmlString_cpsearch(const CXmlString *haystack, const char *needle);
 
 int CXmlString_contains(const CXmlString *str, const CXmlString *sterm);
 int CXmlString_cpcontains(const CXmlString *str, const char *sterm);
-int CXmlString_indexOf(const CXmlString *str, const char *sterm, size_t *index);
+int CXmlString_indexOf(const CXmlString *str, const CXmlString *sterm, size_t *index);
 int CXmlString_cpindexOf(const CXmlString *str, const char *sterm, size_t *index);
 
 void CXmlString_free(void *str);
