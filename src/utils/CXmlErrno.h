@@ -20,12 +20,15 @@
 
 extern CXML_THREAD_LOCAL__ int cxmlerrno;
 
+//Should be called in beginning of functions in CXml modules
+#define CXML_RESET_ERRNO__ cxmlerrno = CXML_ESUCCESS; //TODO Check that it's called
+
 #define CXML_ESUCCESS 0
 #define CXML_EFAILURE (-1)
 #define CXML_EALLOC (-2)
 #define CXML_EDOCCHILD (-3)
 #define CXML_ENULLARG (-4)
 #define CXML_EOUTBOUNDS (-5)
-#define CXML_ERRNO (-100)
+#define CXML_ERRNO (-100) //TODO Should be removed
 
 #endif // _CXMLERRNO_H__
