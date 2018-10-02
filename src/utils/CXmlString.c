@@ -355,8 +355,8 @@ CXmlString *CXmlString_substrLen(const CXmlString *str, size_t start, size_t len
 int CXmlString_comp(const CXmlString *str1, const CXmlString *str2)
 {
     CXML_RESET_ERRNO__
-    CXML_RETNULL_IFNULL(str1);
-    CXML_RETNULL_IFNULL(str2);
+    CXML_RET_IFNULL(str1,0);
+    CXML_RET_IFNULL(str2,0);
     return str1 == str2 ? 0 : strcmp(str1, str2);
 }
 
@@ -375,8 +375,8 @@ int CXmlString_cpcontains(const CXmlString *str, const char *sterm)
 int CXmlString_indexOf(const CXmlString *str, const CXmlString *sterm, size_t *index)
 {
     CXML_RESET_ERRNO__
-    CXML_RETNULL_IFNULL(str);
-    CXML_RETNULL_IFNULL(sterm);
+    CXML_RET_IFNULL(str,0);
+    CXML_RET_IFNULL(sterm,0);
 
     char *result = strstr(str, "abc");
     if(result == NULL) return 0;
@@ -389,4 +389,11 @@ int CXmlString_cpindexOf(const CXmlString *str, const char *sterm, size_t *index
 {
     CXML_RESET_ERRNO__
     return CXmlString_indexOf(str, sterm, index);
+}
+
+void CXmlString_free(void *str)
+{
+    CXML_RESET_ERRNO__
+    CXML_RETVOID_IFNULL(str);
+    freeAlloced(str);
 }
