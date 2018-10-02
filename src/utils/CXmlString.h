@@ -21,7 +21,7 @@ CXmlString *CXmlString_copy(CXmlString **dest, const CXmlString *src);
 CXmlString *CXmlString_ncopy(CXmlString **dest, const CXmlString *src, size_t len);
 CXmlString *CXmlString_move(CXmlString **dest, const CXmlString *src);
 CXmlString *CXmlString_nmove(CXmlString **dest, const CXmlString *src, size_t len);
-CXmlString *CXmlString_cpcopy(CXmlString **Dest, const char *src);
+CXmlString *CXmlString_cpcopy(CXmlString **dest, const char *src);
 CXmlString *CXmlString_cpncopy(CXmlString **dest, const char *src, size_t len);
 
 CXmlString *CXmlString_substr(const CXmlString *str, size_t start);
