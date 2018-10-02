@@ -1,8 +1,8 @@
 #include "CXmlParser.h"
 #include "../cxmltree/CXmlNode.h"
 #include "../cxmltree/CxmlDocument.h"
-#include "../utils/cxml_stack.h"
-#include "../utils/cxml_queue.h"
+#include "../utils/CXmlStack.h"
+#include "../utils/CXmlQueue.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -385,17 +385,17 @@ void cxml_parser_traverseframetree(struct CXmlParserFrame *frame)
 {
     if(frame == NULL) return;
 
-    CXmlQueue *queue = cxml_queue_new();
+    CXmlQueue *queue = CXmlQueue_new();
 
     struct CXmlParserFrame *curframe;
     struct CXmlParserFrameList *curchild;
-    cxml_queue_enqueue(queue, frame);
-    while(!cxml_queue_isEmpty(queue)){
-        curframe = cxml_queue_dequeue(queue);
+    CXmlQueue_enqueue(queue, frame);
+    while(!CXmlQueue_isEmpty(queue)){
+        curframe = CXmlQueue_dequeue(queue);
         curchild = curframe->children->next;
 
         while(curchild != NULL){
-            cxml_queue_enqueue(queue, curchild->frame);
+            CXmlQueue_enqueue(queue, curchild->frame);
             curchild = curchild->next;
         }
 
@@ -404,24 +404,24 @@ void cxml_parser_traverseframetree(struct CXmlParserFrame *frame)
         CXML_DEBUGF("Parent: %s", curframe->parent != NULL ? curframe->parent->tag : "none");
     }
 
-    cxml_queue_destroy(queue);
+    CXmlQueue_destroy(queue);
 }
 
 static void cxml_parser_freeframetree(struct CXmlParserFrame *frame)
 {
     if(frame == NULL) return;
-    cxml_stack *stack = cxml_stack_new();
+    CXmlStack *stack = CXmlStack_new();
 
     struct CXmlParserFrame *curframe;
     struct CXmlParserFrameList *curchild;
     struct CXmlParserFrameList *tmpfree;
-    cxml_stack_push(stack, frame);
-    while(!cxml_stack_isempty(stack)){
-        curframe = cxml_stack_pop(stack);
+    CXmlStack_push(stack, frame);
+    while(!CXmlStack_isEmpty(stack)){
+        curframe = CXmlStack_pop(stack);
         curchild = curframe->children->next;
 
         while(curchild != NULL){
-            cxml_stack_push(stack, curchild->frame);
+            CXmlStack_push(stack, curchild->frame);
             tmpfree = curchild;
             curchild = curchild->next;
             free(tmpfree);
@@ -431,7 +431,7 @@ static void cxml_parser_freeframetree(struct CXmlParserFrame *frame)
         free(curframe->children);
         free(curframe);
     }
-    cxml_stack_destroy(stack);
+    CXmlStack_destroy(stack);
 }
 
 static void cxml_parser_finalizeNodeTree(struct CXmlParserFrame *frame,
@@ -439,19 +439,19 @@ static void cxml_parser_finalizeNodeTree(struct CXmlParserFrame *frame,
 {
     if(frame == NULL || doc == NULL) return;
 
-    CXmlQueue *queue = cxml_queue_new();
+    CXmlQueue *queue = CXmlQueue_new();
 
     struct CXmlParserFrame *curframe;
     struct CXmlParserFrameList *curchild;
     struct CXmlNode *curparent;
     struct CXmlNode *curnode;
 
-    cxml_queue_enqueue(queue, doc->docnode);
-    cxml_queue_enqueue(queue, frame);
+    CXmlQueue_enqueue(queue, doc->docnode);
+    CXmlQueue_enqueue(queue, frame);
 
-    while(!cxml_queue_isEmpty(queue)){
-        curparent = cxml_queue_dequeue(queue);
-        curframe = cxml_queue_dequeue(queue);
+    while(!CXmlQueue_isEmpty(queue)){
+        curparent = CXmlQueue_dequeue(queue);
+        curframe = CXmlQueue_dequeue(queue);
         curchild = curframe->children->next;
 
         curnode = CXmlNode_new(curframe->type, curframe->tag,
@@ -465,11 +465,11 @@ static void cxml_parser_finalizeNodeTree(struct CXmlParserFrame *frame,
         }
 
         while(curchild != NULL){
-            cxml_queue_enqueue(queue, curnode);
-            cxml_queue_enqueue(queue, curchild->frame);
+            CXmlQueue_enqueue(queue, curnode);
+            CXmlQueue_enqueue(queue, curchild->frame);
             curchild = curchild->next;
         }
     }
-    cxml_stack_destroy(queue);
+    CXmlStack_destroy(queue);
 }
 
