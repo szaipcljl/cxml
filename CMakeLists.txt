@@ -20,7 +20,7 @@ add_library(cxml
         src/utils/CXmlQueue.h
         )
 
-add_executable(cxmltest test/cxmltest.c)
+add_executable(cxmltest test/cxmltest.c test/CXmlStringTest.c test/CXmlStringTest.h test/CXmlTestSetup.h)
 
 target_link_libraries(cxmltest cxml)
 #link_libraries(cxmltest cxml)
