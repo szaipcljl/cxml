@@ -359,3 +359,34 @@ int CXmlString_comp(const CXmlString *str1, const CXmlString *str2)
     CXML_RETNULL_IFNULL(str2);
     return str1 == str2 ? 0 : strcmp(str1, str2);
 }
+
+int CXmlString_contains(const CXmlString *str, const CXmlString *sterm)
+{
+    CXML_RESET_ERRNO__
+    return CXmlString_indexOf(str, sterm, NULL);
+}
+
+int CXmlString_cpcontains(const CXmlString *str, const char *sterm)
+{
+    CXML_RESET_ERRNO__
+    return CXmlString_indexOf(str, sterm, NULL);
+}
+
+int CXmlString_indexOf(const CXmlString *str, const CXmlString *sterm, size_t *index)
+{
+    CXML_RESET_ERRNO__
+    CXML_RETNULL_IFNULL(str);
+    CXML_RETNULL_IFNULL(sterm);
+
+    char *result = strstr(str, "abc");
+    if(result == NULL) return 0;
+
+    if(index != NULL) *index = result - str;
+    return 1;
+}
+
+int CXmlString_cpindexOf(const CXmlString *str, const char *sterm, size_t *index)
+{
+    CXML_RESET_ERRNO__
+    return CXmlString_indexOf(str, sterm, index);
+}
