@@ -11,7 +11,7 @@
         return rettype;                 \
     }
 #define CXML_RETNULL_IFNULL(ptr) CXML_RET_IFNULL(ptr, NULL)
-
+#define CXML_RETVOID_IFNULL(ptr) CXML_RET_IFNULL(ptr,)
 
 
 #if defined(__GNUC__) || defined(__clang__)
