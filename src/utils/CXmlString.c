@@ -270,6 +270,7 @@ CXmlString *CXmlString_copy(CXmlString **dest, const CXmlString *src)
 
 CXmlString *CXmlString_ncopy(CXmlString **dest, const CXmlString *src, size_t len)
 {
+    CXML_RESET_ERRNO__
     CXML_RETNULL_IFNULL(dest);
     CXML_RETNULL_IFNULL(src);
     size_t destSize;
@@ -290,5 +291,51 @@ CXmlString *CXmlString_ncopy(CXmlString **dest, const CXmlString *src, size_t le
     return *dest;
 }
 
+CXmlString *CXmlString_move(CXmlString **dest, const CXmlString *src)
+{
+    CXML_RESET_ERRNO__
+    CXML_RETNULL_IFNULL(src);
+    size_t srclen;
+    CXMLS_GET_LEN(src, srclen);
+    return CXmlString_nmove(dest, src, srclen);
+}
 
+CXmlString *CXmlString_nmove(CXmlString **dest, const CXmlString *src, size_t len)
+{
+    CXML_RESET_ERRNO__
+    CXML_RETNULL_IFNULL(dest);
+    CXML_RETNULL_IFNULL(src);
+    char buf[len];
+    memcpy(buf, src, len);
+    return CXmlString_ncopy(dest, buf, len);
+}
 
+CXmlString *CXmlString_cpcopy(CXmlString **dest, const char *src)
+{
+    CXML_RESET_ERRNO__
+    return CXmlString_copy(dest, src);
+}
+
+CXmlString *CXmlString_cpncopy(CXmlString **dest, const char *src, size_t len)
+{
+    CXML_RESET_ERRNO__
+    return CXmlString_ncopy(dest, src, len);
+}
+
+CXmlString *CXmlString_substr(const CXmlString *str, size_t start)
+{
+    NOT_IMPLEMENTED //TODO Implement
+}
+
+CXmlString *CXmlString_substrLen(const CXmlString *str, size_t start, size_t len)
+{
+    NOT_IMPLEMENTED //TODO Implement
+}
+
+int CXmlString_comp(const CXmlString *str1, const CXmlString *str2)
+{
+    CXML_RESET_ERRNO__
+    CXML_RETNULL_IFNULL(str1);
+    CXML_RETNULL_IFNULL(str2);
+    return str1 == str2 ? 0 : strcmp(str1, str2);
+}
