@@ -1,5 +1,5 @@
 #include "CXmlQueue.h"
-#include "cxml_preproc.h"
+#include "CXmlPreProcessor.h"
 #include <stdlib.h>
 
 struct CXmlQueueNode{
