@@ -1,5 +1,7 @@
 <root>
-    <first>firstline
+    <first>
+        firstline
         inner
+        test
     </first>
 </root>

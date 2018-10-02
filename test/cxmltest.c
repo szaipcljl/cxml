@@ -1,25 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../src/parser/cxml_parser.h"
+#include "../src/parser/CXmlParser.h"
 
 int main(){
     CXML_DEBUG("Starting");
-    cxml_parser *parser = cxml_parser_new();
-    char filepath[256];
+    CXmlParser *parser = CXmlParser_new();
+    char *filepath = "../test.xml";
 
-    strcat(strcpy(filepath, getenv("HOME")), "/private/gitrepos/cxml/test.xml");
-    cxml_document *doc = cxml_parsefile(parser, filepath);
+    //strcat(strcpy(filepath, getenv("HOME")), "/private/gitrepos/cxml/test.xml");
+    CXmlDocument *doc = CXmlParser_parsefile(parser, filepath);
 
     unsigned i;
-    cxml_node **nodes = cxml_node_getChildrenByTag(doc->root, "first", &i);
+    /*CXmlNode **nodes = CXmlNode_getChildrenByTag(doc->root, "first", &i);
     if(nodes != NULL) CXML_DEBUG("OOOOH BABY!");
-    free(nodes);
+    free(nodes);*/
 
-    cxml_document_destroy(doc);
+    CXmlDocument_destroy(doc);
 
-    CXML_DEBUG("Returned from cxml_parsefile");
-    cxml_parser_destroy(parser);
+    CXML_DEBUG("Returned from CXmlParser_parsefile");
+    CxmlParser_destroy(parser);
     CXML_DEBUG("Exiting");
     return 0;
 }

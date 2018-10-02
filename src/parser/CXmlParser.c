@@ -1,7 +1,8 @@
-#include "cxml_parser.h"
-#include "../cxmltree/cxml_node.h"
-#include "../cxmltree/cxml_document.h"
+#include "CXmlParser.h"
+#include "../cxmltree/CXmlNode.h"
+#include "../cxmltree/CxmlDocument.h"
 #include "../utils/cxml_stack.h"
+#include "../utils/cxml_queue.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,35 +10,35 @@
 #include <ctype.h>
 
 
-enum cxml_ptagtype{
+enum CXmlParserTagType{
     CXML_PTT_OPENING,
     CXML_PTT_CLOSING,
     CXML_PTT_OPENCLOSE,
 };
 
-enum cxml_pstate{
+enum CXmlParserState{
     CXML_PS_INNER,
     CXML_PS_RDY
 };
 
-struct cxml_parser_frame{
+struct CXmlParserFrame{
     char *tag;
-    char *innerText;
     size_t depth;
-    struct cxml_parser_frame *parent;
-    struct cxml_parser_framelist *children;
+    CXmlNodeType type;
+    struct CXmlParserFrame *parent;
+    struct CXmlParserFrameList *children;
 };
 
-struct cxml_parser_framelist{
-    struct cxml_parser_frame *frame;
-    struct cxml_parser_framelist *next;
-    struct cxml_parser_framelist *prev;
+struct CXmlParserFrameList{
+    struct CXmlParserFrame *frame;
+    struct CXmlParserFrameList *next;
+    struct CXmlParserFrameList *prev;
 };
 
-struct cxml_parser{
-    struct cxml_parser_frame *curframe;
-    struct cxml_parser_frame *rootframe;
-    enum cxml_pstate state;
+struct CXmlParser{
+    struct CXmlParserFrame *curframe;
+    struct CXmlParserFrame *rootframe;
+    enum CXmlParserState state;
     unsigned depth;
     int error;
     char *buf;
@@ -54,24 +55,24 @@ struct cxml_parser{
         (offset) = 0;                                           \
     }while(0)
 
-static void cxml_parsestring(cxml_parser *parser, const char *line);
-static char *cxml_readtagname(size_t len, char **tag, const char *line, size_t *loopinc, enum cxml_ptagtype *tagtype);
+static void cxml_parsestring(CXmlParser *parser, const char *line);
+static char *cxml_readtagname(size_t len, char **tag, const char *line, size_t *loopinc, enum CXmlParserTagType *tagtype);
 
 static long long cxml_parser_getline(char **lineptr, size_t *n, FILE *stream);
 static char *cxml_parser_trimwhitespace(const char *str);
 
-static struct cxml_parser_frame *cxml_frame_new(const char *tag, size_t depth, struct cxml_parser_frame *parent);
-static void cxml_frame_appendchild(struct cxml_parser_frame *frame, struct cxml_parser_frame *child);
-static void cxml_parser_finalizenodetree(struct cxml_parser_frame *frame,
-                                         cxml_document *doc);
-static void cxml_parser_freeframetree(struct cxml_parser_frame *frame);
+static struct CXmlParserFrame *cxml_frame_new(const char *tag, size_t depth, struct CXmlParserFrame *parent, CXmlNodeType type);
+static void cxml_frame_appendchild(struct CXmlParserFrame *frame, struct CXmlParserFrame *child);
+static void cxml_parser_finalizeNodeTree(struct CXmlParserFrame *frame,
+                                         CXmlDocument *doc);
+static void cxml_parser_freeframetree(struct CXmlParserFrame *frame);
 
-void cxml_parser_traverseframetree(struct cxml_parser_frame *frame); //TODO REMOVE
+void cxml_parser_traverseframetree(struct CXmlParserFrame *frame); //TODO REMOVE
 
-cxml_parser *cxml_parser_new()
+CXmlParser *CXmlParser_new()
 {
     CXML_DEBUG("Creating parser");
-    cxml_parser *parser = malloc(sizeof *parser);
+    CXmlParser *parser = malloc(sizeof *parser);
     parser->depth = 0;
     parser->error = CXML_ESUCCESS;
     parser->state = CXML_PS_RDY;
@@ -82,7 +83,7 @@ cxml_parser *cxml_parser_new()
     return parser;
 }
 
-cxml_document *cxml_parsefile(cxml_parser *parser, const char *filename)
+CXmlDocument *CXmlParser_parsefile(CXmlParser *parser, const char *filename)
 {
     CXML_DEBUGF("Opening file: %s", filename);
     FILE *fp = fopen(filename, "r");
@@ -108,8 +109,8 @@ cxml_document *cxml_parsefile(cxml_parser *parser, const char *filename)
     CXML_DEBUG("Printing frame tree");
     cxml_parser_traverseframetree(parser->rootframe);
 
-    cxml_document *doc = cxml_document_new();
-    cxml_parser_finalizenodetree(parser->rootframe, doc);
+    CXmlDocument *doc = CXmlDocument_new();
+    cxml_parser_finalizeNodeTree(parser->rootframe, doc);
     cxml_parser_freeframetree(parser->rootframe);
 
     free(parser->buf);
@@ -117,18 +118,18 @@ cxml_document *cxml_parsefile(cxml_parser *parser, const char *filename)
     return doc;
 }
 
-cxml_document *cxml_parsexml(cxml_parser *parser, const char **xml, size_t lines)
+CXmlDocument *cxml_parsexml(CXmlParser *parser, const char **xml, size_t lines)
 {
     //TODO implement
     return NULL;
 }
 
-static void cxml_parsestring(cxml_parser *parser, const char *line)
+static void cxml_parsestring(CXmlParser *parser, const char *line)
 {
     static int enterCount = 0;
     char *trimmedline = cxml_parser_trimwhitespace(line);
     size_t linelen = strlen(trimmedline);
-    enum cxml_ptagtype tagtype;
+    enum CXmlParserTagType tagtype;
     char *tag = NULL;
     char buf[256] = {0};
     unsigned offset = 0;
@@ -138,29 +139,51 @@ static void cxml_parsestring(cxml_parser *parser, const char *line)
             cxml_readtagname(linelen, &tag, trimmedline, &i, &tagtype);
             if(tagtype == CXML_PTT_CLOSING){
                 CXML_DEBUGF("Offset: %d", offset);
-                CXML_PARSER_WRITE_TO_STORE(parser, buf, offset);
-                if(parser->bufsize > 0){
-                    CXML_DEBUG("We made it");
-                    parser->curframe->innerText = malloc(parser->bufsize+1);
-                    strncpy(parser->curframe->innerText, parser->buf, parser->bufsize);
-                    parser->curframe->innerText[parser->bufsize] = '\0';
+                if(offset > 0 || parser->bufsize > 0){
+                    char txtTag[offset+parser->bufsize+1];
+                    if(parser->bufsize > 0) strncpy(txtTag, parser->buf, parser->bufsize);
+                    strncpy(txtTag+parser->bufsize, buf, offset);
+                    txtTag[parser->bufsize] = '\0';
+                    struct CXmlParserFrame *txtFrame = cxml_frame_new(txtTag, parser->depth, parser->curframe, CXML_TEXT);
+                    cxml_frame_appendchild(parser->curframe, txtFrame);
                     free(parser->buf);
                     parser->buf = NULL;
                     parser->bufsize = 0;
                 }
+                /*CXML_PARSER_WRITE_TO_STORE(parser, buf, offset);
+                if(parser->bufsize > 0){
+                    CXML_DEBUG("We made it");
+
+                    char txtTag[parser->bufsize+1];
+                    strncpy(txtTag, parser->buf, parser->bufsize);
+                    txtTag[parser->bufsize] = '\0';
+                    struct CXmlParserFrame *txtFrame = cxml_frame_new(txtTag, parser->depth, parser->curframe, CXML_TEXT);
+                    cxml_frame_appendchild(parser->curframe, txtFrame);
+                    free(parser->buf);
+                    parser->buf = NULL;
+                    parser->bufsize = 0;
+
+                    //TODO moving curframe->text to CXML_TEXT node
+                    //parser->curframe->text = malloc(parser->bufsize+1);
+                    //strncpy(parser->curframe->text, parser->buf, parser->bufsize);
+                    //parser->curframe->text[parser->bufsize] = '\0';
+                    //free(parser->buf);
+                    //parser->buf = NULL;
+                    //parser->bufsize = 0;
+                }*/
 
                 parser->depth--;
                 parser->curframe = parser->curframe->parent;
             }
 
             if(tagtype == CXML_PTT_OPENING || tagtype == CXML_PTT_OPENCLOSE){
-                struct cxml_parser_frame *newFrame = cxml_frame_new(tag, parser->depth, parser->curframe);
+                struct CXmlParserFrame *elemFrame = cxml_frame_new(tag, parser->depth, parser->curframe, CXML_ELEMENT);
 
-                if(parser->depth == 0) parser->rootframe = newFrame;
-                if(parser->curframe != NULL) cxml_frame_appendchild(parser->curframe, newFrame);
+                if(parser->depth == 0) parser->rootframe = elemFrame;
+                if(parser->curframe != NULL) cxml_frame_appendchild(parser->curframe, elemFrame);
 
                 if(tagtype == CXML_PTT_OPENING){
-                    parser->curframe = newFrame;
+                    parser->curframe = elemFrame;
                     parser->depth++;
                     parser->state = CXML_PS_INNER;
                 }
@@ -174,15 +197,27 @@ static void cxml_parsestring(cxml_parser *parser, const char *line)
         buf[offset] = trimmedline[i];
         offset++;
     }
-    if(offset > 0){
-        CXML_PARSER_WRITE_TO_STORE(parser, buf, offset);
+
+    if(offset > 0 || parser->bufsize > 0){
+        char txtTag[offset+parser->bufsize+1];
+        strncpy(txtTag, parser->buf, parser->bufsize);
+        strncpy(txtTag+parser->bufsize, buf, offset);
+        txtTag[offset+parser->bufsize] = '\0';
+        struct CXmlParserFrame *txtFrame = cxml_frame_new(txtTag, parser->depth, parser->curframe, CXML_TEXT);
+        cxml_frame_appendchild(parser->curframe, txtFrame);
+        free(parser->buf);
+        parser->buf = NULL;
+        parser->bufsize = 0;
     }
+    /*if(offset > 0){
+        CXML_PARSER_WRITE_TO_STORE(parser, buf, offset);
+    }*/
     free(tag);
     free(trimmedline);
 }
 
 /*Parser support functions*/
-static char *cxml_readtagname(size_t len, char **tag, const char *line, size_t *loopinc, enum cxml_ptagtype *tagtype)
+static char *cxml_readtagname(size_t len, char **tag, const char *line, size_t *loopinc, enum CXmlParserTagType *tagtype)
 {
     size_t origin = *loopinc;
     CXML_DEBUGF("Origin: %zu", origin);
@@ -306,9 +341,9 @@ static char *cxml_parser_trimwhitespace(const char *str)
 }
 
 /*Parser frame functions*/
-static struct cxml_parser_frame *cxml_frame_new(const char *tag, size_t depth, struct cxml_parser_frame *parent)
+static struct CXmlParserFrame *cxml_frame_new(const char *tag, size_t depth, struct CXmlParserFrame *parent, CXmlNodeType type)
 {
-    struct cxml_parser_frame *frame = malloc(sizeof *frame);
+    struct CXmlParserFrame *frame = malloc(sizeof *frame);
     if(tag != NULL) {
         frame->tag = malloc(strlen(tag) + 1);
         strcpy(frame->tag, tag);
@@ -319,16 +354,16 @@ static struct cxml_parser_frame *cxml_frame_new(const char *tag, size_t depth, s
     frame->children->next = NULL;
     frame->children->prev = NULL;
     frame->children->frame = NULL;
-    frame->innerText = NULL;
     frame->parent = parent;
     frame->depth = depth;
+    frame->type = type;
     return frame;
 }
 
-static void cxml_frame_appendchild(struct cxml_parser_frame *frame, struct cxml_parser_frame *child)
+static void cxml_frame_appendchild(struct CXmlParserFrame *frame, struct CXmlParserFrame *child)
 {
-    struct cxml_parser_framelist *list = frame->children;
-    struct cxml_parser_framelist *new = malloc(sizeof *new);
+    struct CXmlParserFrameList *list = frame->children;
+    struct CXmlParserFrameList *new = malloc(sizeof *new);
     new->frame = child;
 
     if(list->next == NULL){
@@ -346,41 +381,40 @@ static void cxml_frame_appendchild(struct cxml_parser_frame *frame, struct cxml_
 }
 
 //TODO remove
-void cxml_parser_traverseframetree(struct cxml_parser_frame *frame)
+void cxml_parser_traverseframetree(struct CXmlParserFrame *frame)
 {
     if(frame == NULL) return;
 
-    cxml_stack *stack = cxml_stack_new();
+    CXmlQueue *queue = cxml_queue_new();
 
-    struct cxml_parser_frame *curframe;
-    struct cxml_parser_framelist *curchild;
-    cxml_stack_push(stack, frame);
-    while(!cxml_stack_isempty(stack)){
-        curframe = cxml_stack_pop(stack);
+    struct CXmlParserFrame *curframe;
+    struct CXmlParserFrameList *curchild;
+    cxml_queue_enqueue(queue, frame);
+    while(!cxml_queue_isEmpty(queue)){
+        curframe = cxml_queue_dequeue(queue);
         curchild = curframe->children->next;
 
         while(curchild != NULL){
-            cxml_stack_push(stack, curchild->frame);
+            cxml_queue_enqueue(queue, curchild->frame);
             curchild = curchild->next;
         }
 
         CXML_DEBUGF("Tag: %s", curframe->tag);
         CXML_DEBUGF("Depth: %zu",curframe->depth);
         CXML_DEBUGF("Parent: %s", curframe->parent != NULL ? curframe->parent->tag : "none");
-        CXML_DEBUGF("Text: %s", curframe->innerText != NULL ? curframe->innerText : "none");
     }
 
-    cxml_stack_destroy(stack);
+    cxml_queue_destroy(queue);
 }
 
-static void cxml_parser_freeframetree(struct cxml_parser_frame *frame)
+static void cxml_parser_freeframetree(struct CXmlParserFrame *frame)
 {
     if(frame == NULL) return;
     cxml_stack *stack = cxml_stack_new();
 
-    struct cxml_parser_frame *curframe;
-    struct cxml_parser_framelist *curchild;
-    struct cxml_parser_framelist *tmpfree;
+    struct CXmlParserFrame *curframe;
+    struct CXmlParserFrameList *curchild;
+    struct CXmlParserFrameList *tmpfree;
     cxml_stack_push(stack, frame);
     while(!cxml_stack_isempty(stack)){
         curframe = cxml_stack_pop(stack);
@@ -393,7 +427,6 @@ static void cxml_parser_freeframetree(struct cxml_parser_frame *frame)
             free(tmpfree);
         }
 
-        free(curframe->innerText);
         free(curframe->tag);
         free(curframe->children);
         free(curframe);
@@ -401,41 +434,42 @@ static void cxml_parser_freeframetree(struct cxml_parser_frame *frame)
     cxml_stack_destroy(stack);
 }
 
-static void cxml_parser_finalizenodetree(struct cxml_parser_frame *frame,
-                                         cxml_document *doc)
+static void cxml_parser_finalizeNodeTree(struct CXmlParserFrame *frame,
+                                         CXmlDocument *doc)
 {
     if(frame == NULL || doc == NULL) return;
 
-    cxml_stack *stack = cxml_stack_new();
+    CXmlQueue *queue = cxml_queue_new();
 
-    struct cxml_parser_frame *curframe;
-    struct cxml_parser_framelist *curchild;
-    struct cxml_node *curparent;
-    struct cxml_node *curnode;
+    struct CXmlParserFrame *curframe;
+    struct CXmlParserFrameList *curchild;
+    struct CXmlNode *curparent;
+    struct CXmlNode *curnode;
 
-    cxml_stack_push(stack, doc->docnode);
-    cxml_stack_push(stack, frame);
+    cxml_queue_enqueue(queue, doc->docnode);
+    cxml_queue_enqueue(queue, frame);
 
-    while(!cxml_stack_isempty(stack)){
-        curframe = cxml_stack_pop(stack);
-        curparent = cxml_stack_pop(stack);
+    while(!cxml_queue_isEmpty(queue)){
+        curparent = cxml_queue_dequeue(queue);
+        curframe = cxml_queue_dequeue(queue);
         curchild = curframe->children->next;
 
-        curnode = cxml_node_new(CXML_NODE, curframe->tag, curframe->innerText, curparent);
+        curnode = CXmlNode_new(curframe->type, curframe->tag,
+                               NULL /*TODO remove text from node*/, curparent);
         if(curparent != NULL){
             if(curparent->type == CXML_DOCUMENT){
-                cxml_document_setRoot(doc, curnode);
+                CXmlDocument_setRoot(doc, curnode);
             }else {
-                cxml_node_appendChild(curparent, curnode);
+                CXmlNode_appendChild(curparent, curnode);
             }
         }
 
         while(curchild != NULL){
-            cxml_stack_push(stack, curnode);
-            cxml_stack_push(stack, curchild->frame);
+            cxml_queue_enqueue(queue, curnode);
+            cxml_queue_enqueue(queue, curchild->frame);
             curchild = curchild->next;
         }
     }
-    cxml_stack_destroy(stack);
+    cxml_stack_destroy(queue);
 }
 

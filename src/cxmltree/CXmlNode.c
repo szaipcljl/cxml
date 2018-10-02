@@ -1,16 +1,16 @@
-#include "cxml_node.h"
+#include "CXmlNode.h"
 #include "../utils/cxml_stack.h"
 #include <stdlib.h>
 #include <string.h>
 
-struct cxml_nodelist{
-    cxml_node *node;
-    cxml_nodelist *next;
-    cxml_nodelist *prev;
+struct CXmlNodeList{
+    CXmlNode *node;
+    CXmlNodeList *next;
+    CXmlNodeList *prev;
 };
 
-struct cxml_nodeprivate{
-    cxml_node public;
+struct CXmlNodePrivate{
+    CXmlNode public;
     int dhndl;
     int *error;
     unsigned nchild;
@@ -26,15 +26,16 @@ struct cxml_nodeprivate{
         }                                           \
     }while(0)
 
-static inline struct cxml_nodeprivate *cxml_node_getPriv(cxml_node *node);
+static inline struct CXmlNodePrivate *cxml_node_getPriv(CXmlNode *node);
 
-cxml_node *cxml_node_new(cxml_node_type type, const char *tag, const char *itxt, cxml_node *parent)
+CXmlNode *CXmlNode_new(CXmlNodeType type, const char *tag, const char *itxt,
+                       CXmlNode *parent)
 {
     if(parent == NULL && type != CXML_DOCUMENT){
         return NULL;
     }
 
-    struct cxml_nodeprivate *private = malloc(sizeof *private);
+    struct CXmlNodePrivate *private = malloc(sizeof *private);
     if(private == NULL){
         if(parent != NULL){
             *cxml_node_getPriv(parent)->error = CXML_EALLOC;
@@ -47,10 +48,10 @@ cxml_node *cxml_node_new(cxml_node_type type, const char *tag, const char *itxt,
     CXML_NODE_COPY_TEXT(tmptag, tag);
     CXML_NODE_COPY_TEXT(tmpitxt, itxt);
 
-    struct cxml_node tmp = {
+    struct CXmlNode tmp = {
         .type = type,
         .tag = tmptag,
-        .innerText = tmpitxt,
+        .text = tmpitxt,
         .parent = parent,
         .children = NULL
     };
@@ -73,17 +74,17 @@ cxml_node *cxml_node_new(cxml_node_type type, const char *tag, const char *itxt,
     return &private->public;
 }
 
-int cxml_node_hasChildren(cxml_node *node)
+int CXmlNode_hasChildren(CXmlNode *node)
 {
     return cxml_node_getPriv(node)->nchild > 0;
 }
 
-unsigned cxml_node_childCount(cxml_node *node)
+unsigned CXmlNode_childCount(CXmlNode *node)
 {
     return cxml_node_getPriv(node)->nchild;
 }
 
-int cxml_node_appendChild(cxml_node *node, cxml_node *child)
+int CXmlNode_appendChild(CXmlNode *node, CXmlNode *child)
 {
     if(node == NULL) return CXML_ENULLARG;
     if(child == NULL){
@@ -91,9 +92,9 @@ int cxml_node_appendChild(cxml_node *node, cxml_node *child)
         return CXML_EFAILURE;
     }
 
-    struct cxml_nodeprivate *private = cxml_node_getPriv(node);
+    struct CXmlNodePrivate *private = cxml_node_getPriv(node);
 
-    struct cxml_nodelist *newitem = malloc(sizeof *newitem);
+    struct CXmlNodeList *newitem = malloc(sizeof *newitem);
     if(newitem == NULL){
         cxml_node_seterror__(node, CXML_EALLOC);
         return CXML_EFAILURE;
@@ -114,7 +115,7 @@ int cxml_node_appendChild(cxml_node *node, cxml_node *child)
     return CXML_ESUCCESS;
 }
 
-cxml_node *cxml_node_getChild(cxml_node *node, unsigned index)
+CXmlNode *CXmlNode_getChild(CXmlNode *node, unsigned index)
 {
     if(node == NULL){
         cxml_node_seterror__(node, CXML_ENULLARG);
@@ -126,7 +127,7 @@ cxml_node *cxml_node_getChild(cxml_node *node, unsigned index)
         return NULL;
     }
 
-    cxml_nodelist *curchild = node->children->next;
+    CXmlNodeList *curchild = node->children->next;
     if(curchild == NULL) return NULL;
 
     for(unsigned i = 0; i < index; i++){
@@ -137,14 +138,14 @@ cxml_node *cxml_node_getChild(cxml_node *node, unsigned index)
     return curchild->node;
 }
 
-cxml_node *cxml_node_getChildByTag(cxml_node *node, const char *tag)
+CXmlNode *CXmlNode_getChildByTag(CXmlNode *node, const char *tag)
 {
     if(node == NULL || tag == NULL){
         cxml_node_seterror__(node, CXML_ENULLARG);
         return NULL;
     }
 
-    cxml_nodelist *curchild = node->children->next;
+    CXmlNodeList *curchild = node->children->next;
     int found = 0;
     while(curchild != NULL){
         if(strcmp(curchild->node->tag, tag) == 0){
@@ -156,8 +157,8 @@ cxml_node *cxml_node_getChildByTag(cxml_node *node, const char *tag)
     return found ? curchild->node : NULL;
 }
 
-cxml_node **cxml_node_getChildrenByTag(cxml_node *node, const char *tag,
-                                       unsigned *nchild)
+CXmlNode **CXmlNode_getChildrenByTag(CXmlNode *node, const char *tag,
+                                     unsigned *nchild)
 {
     if(node == NULL || tag == NULL){
         cxml_node_seterror__(node, CXML_ENULLARG);
@@ -166,7 +167,7 @@ cxml_node **cxml_node_getChildrenByTag(cxml_node *node, const char *tag,
 
     cxml_stack *stack = cxml_stack_new();
     *nchild = 0;
-    cxml_nodelist *curchild = node->children->next;
+    CXmlNodeList *curchild = node->children->next;
     while(curchild != NULL){
         if(strcmp(curchild->node->tag, tag) == 0){
             cxml_stack_push(stack, curchild->node);
@@ -177,7 +178,7 @@ cxml_node **cxml_node_getChildrenByTag(cxml_node *node, const char *tag,
 
     if(*nchild == 0) return NULL;
 
-    cxml_node **arr = malloc((sizeof *arr) * (*nchild));
+    CXmlNode **arr = malloc((sizeof *arr) * (*nchild));
     for(int i = (*nchild)-1; i >= 0; i--){
         arr[i] = cxml_stack_pop(stack);
     }
@@ -185,31 +186,31 @@ cxml_node **cxml_node_getChildrenByTag(cxml_node *node, const char *tag,
     return arr;
 }
 
-cxml_node *cxml_node_getRoot(cxml_node *node)
+CXmlNode *CXmlNode_getRoot(CXmlNode *node)
 {
     return &CXML_CONTAINER_OF__(cxml_node_getPriv(node)->error,
                                 struct cxml_nodeprivate,
                                 dhndl)->public;
 }
 
-void cxml_node_destroy(void *node)
+void CXmlNode_destroy(void *node)
 {
     if(node == NULL) return;
-    struct cxml_nodeprivate *private = cxml_node_getPriv(node);
+    struct CXmlNodePrivate *private = cxml_node_getPriv(node);
     free((char *)private->public.tag);
-    free((char *)private->public.innerText);
+    free((char *)private->public.text);
     free(private->public.children);
     free(private);
 }
 
-void cxml_node_destroyTree(void *node)
+void CXmlNode_destroyTree(void *node)
 {
     if(node == NULL) return;
     cxml_stack *stack = cxml_stack_new();
 
-    cxml_node *curnode;
-    cxml_nodelist *curchild;
-    cxml_nodelist *tmpfree;
+    CXmlNode *curnode;
+    CXmlNodeList *curchild;
+    CXmlNodeList *tmpfree;
 
     cxml_stack_push(stack, node);
     while(!cxml_stack_isempty(stack)){
@@ -223,17 +224,17 @@ void cxml_node_destroyTree(void *node)
             free(tmpfree);
         }
 
-        cxml_node_destroy(curnode);
+        CXmlNode_destroy(curnode);
     }
     cxml_stack_destroy(stack);
 }
 
-void cxml_node_seterror__(cxml_node *node, int error)
+void cxml_node_seterror__(CXmlNode *node, int error)
 {
     *cxml_node_getPriv(node)->error = error;
 }
 
-static inline struct cxml_nodeprivate *cxml_node_getPriv(cxml_node *node)
+static inline struct CXmlNodePrivate *cxml_node_getPriv(CXmlNode *node)
 {
     return CXML_CONTAINER_OF__(node, struct cxml_nodeprivate, public);
 }
