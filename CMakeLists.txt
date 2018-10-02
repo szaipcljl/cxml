@@ -9,7 +9,16 @@ add_library(cxml
         src/cxmltree/CxmlDocument.c
         src/cxmltree/CxmlDocument.h
         src/parser/CXmlParser.c
-        src/parser/CXmlParser.h src/utils/cxml_stack.c src/utils/cxml_stack.h src/utils/CXmlQueue.c src/utils/CXmlQueue.h src/utils/cxml_preproc.h src/utils/CXmlString.c src/utils/CXmlString.h)
+        src/parser/CXmlParser.h
+        src/utils/CXmlErrno.h
+        src/utils/CXmlPreProcessor.h
+        src/utils/CXmlStack.c
+        src/utils/CXmlStack.h
+        src/utils/CXmlString.c
+        src/utils/CXmlString.h
+        src/utils/CXmlQueue.c
+        src/utils/CXmlQueue.h
+        )
 
 add_executable(cxmltest test/cxmltest.c)
 
