@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../src/parser/CXmlParser.h"
+#include "../src/utils/CXmlPreProcessor.h"
 
 int main(){
     CXML_DEBUG("Starting");
