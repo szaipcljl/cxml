@@ -3,6 +3,7 @@
 #include "../cxmltree/CxmlDocument.h"
 #include "../utils/CXmlStack.h"
 #include "../utils/CXmlQueue.h"
+#include "../utils/CXmlPreProcessor.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
