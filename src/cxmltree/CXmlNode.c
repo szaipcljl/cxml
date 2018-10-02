@@ -1,5 +1,5 @@
 #include "CXmlNode.h"
-#include "../utils/cxml_stack.h"
+#include "../utils/CXmlStack.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -165,12 +165,12 @@ CXmlNode **CXmlNode_getChildrenByTag(CXmlNode *node, const char *tag,
         return NULL;
     }
 
-    cxml_stack *stack = cxml_stack_new();
+    CXmlStack *stack = CXmlStack_new();
     *nchild = 0;
     CXmlNodeList *curchild = node->children->next;
     while(curchild != NULL){
         if(strcmp(curchild->node->tag, tag) == 0){
-            cxml_stack_push(stack, curchild->node);
+            CXmlStack_push(stack, curchild->node);
             (*nchild)++;
         }
         curchild = curchild->next;
@@ -180,16 +180,16 @@ CXmlNode **CXmlNode_getChildrenByTag(CXmlNode *node, const char *tag,
 
     CXmlNode **arr = malloc((sizeof *arr) * (*nchild));
     for(int i = (*nchild)-1; i >= 0; i--){
-        arr[i] = cxml_stack_pop(stack);
+        arr[i] = CXmlStack_pop(stack);
     }
-    cxml_stack_destroy(stack);
+    CXmlStack_destroy(stack);
     return arr;
 }
 
 CXmlNode *CXmlNode_getRoot(CXmlNode *node)
 {
     return &CXML_CONTAINER_OF__(cxml_node_getPriv(node)->error,
-                                struct cxml_nodeprivate,
+                                struct CXmlNodePrivate,
                                 dhndl)->public;
 }
 
@@ -206,19 +206,19 @@ void CXmlNode_destroy(void *node)
 void CXmlNode_destroyTree(void *node)
 {
     if(node == NULL) return;
-    cxml_stack *stack = cxml_stack_new();
+    CXmlStack *stack = CXmlStack_new();
 
     CXmlNode *curnode;
     CXmlNodeList *curchild;
     CXmlNodeList *tmpfree;
 
-    cxml_stack_push(stack, node);
-    while(!cxml_stack_isempty(stack)){
-        curnode = cxml_stack_pop(stack);
+    CXmlStack_push(stack, node);
+    while(!CXmlStack_isEmpty(stack)){
+        curnode = CXmlStack_pop(stack);
         curchild = curnode->children->next;
 
         while(curchild != NULL){
-            cxml_stack_push(stack, curchild->node);
+            CXmlStack_push(stack, curchild->node);
             tmpfree = curchild;
             curchild = curchild->next;
             free(tmpfree);
@@ -226,7 +226,7 @@ void CXmlNode_destroyTree(void *node)
 
         CXmlNode_destroy(curnode);
     }
-    cxml_stack_destroy(stack);
+    CXmlStack_destroy(stack);
 }
 
 void cxml_node_seterror__(CXmlNode *node, int error)
@@ -236,5 +236,5 @@ void cxml_node_seterror__(CXmlNode *node, int error)
 
 static inline struct CXmlNodePrivate *cxml_node_getPriv(CXmlNode *node)
 {
-    return CXML_CONTAINER_OF__(node, struct cxml_nodeprivate, public);
+    return CXML_CONTAINER_OF__(node, struct CXmlNodePrivate, public);
 }
