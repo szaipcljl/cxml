@@ -1,5 +1,6 @@
 #include "CXmlNode.h"
 #include "../utils/CXmlStack.h"
+#include "../utils/CXmlPreProcessor.h"
 #include <stdlib.h>
 #include <string.h>
 

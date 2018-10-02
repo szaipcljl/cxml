@@ -1,18 +1,7 @@
 #ifndef _CXML_NODE_H__
 #define _CXML_NODE_H__
 
-#if defined(__GNUC__) || defined(__clang__)
-#define member_type(type, member) __typeof__ (((type *)0)->member)
-#else
-#define member_type(type, member) const void
-#endif
-
 #include <stddef.h>
-
-#define CXML_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define CXML_DEBUGF(msg, ...)\
-    printf("[DEBUG] %s::%s:%d | "msg"\n", CXML_FILENAME__, __func__, __LINE__, __VA_ARGS__)
-#define CXML_DEBUG(msg) CXML_DEBUGF("%s", msg)
 
 #define CXML_ESUCCESS 0
 #define CXML_EFAILURE (-1)
@@ -21,8 +10,7 @@
 #define CXML_ENULLARG (-4)
 #define CXML_EOUTBOUNDS (-5)
 #define CXML_ERRNO (-100)
-#define CXML_CONTAINER_OF__(ptr, type, member) ((type *)( \
-    (char *)(member_type(type, member) *){ ptr } - offsetof(type, member)))
+
 
 typedef enum CXmlNodeType{
     CXML_NODE,
