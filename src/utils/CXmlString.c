@@ -324,12 +324,32 @@ CXmlString *CXmlString_cpncopy(CXmlString **dest, const char *src, size_t len)
 
 CXmlString *CXmlString_substr(const CXmlString *str, size_t start)
 {
-    NOT_IMPLEMENTED //TODO Implement
+    CXML_RESET_ERRNO__
+    CXML_RETNULL_IFNULL(str);
+    size_t len;
+    CXMLS_GET_LEN(str, len);
+    if(start >= len){
+        cxmlerrno = CXML_EOUTBOUNDS;
+        return NULL;
+    }
+    CXmlString *substr = CXmlString_new(str+start);
+    return substr;
 }
 
 CXmlString *CXmlString_substrLen(const CXmlString *str, size_t start, size_t len)
 {
-    NOT_IMPLEMENTED //TODO Implement
+    CXML_RESET_ERRNO__
+    CXML_RETNULL_IFNULL(str);
+    size_t slen;
+    CXMLS_GET_LEN(str, slen);
+    if(start >= slen || start+len > slen){
+        cxmlerrno = CXML_EOUTBOUNDS;
+        return NULL;
+    }
+    CXmlString *substr = CXmlString_newLen(str+start, len);
+    strncpy(substr, str+start, len);
+    CXMLS_SET_LEN(substr, len);
+    return substr;
 }
 
 int CXmlString_comp(const CXmlString *str1, const CXmlString *str2)
