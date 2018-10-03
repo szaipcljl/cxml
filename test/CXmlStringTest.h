@@ -1,6 +1,7 @@
 #ifndef _CXMLSTRINGTEST_H__
 #define _CXMLSTRINGTEST_H__
+#include "CXmlTestSetup.h"
 
-int CXmlStringTest_run();
+TEST_IMPORT_MODULE(CXmlStringTest);
 
 #endif // _CXMLSTRINGTEST_H__

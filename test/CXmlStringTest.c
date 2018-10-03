@@ -3,45 +3,41 @@
 #include "CXmlTestSetup.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+/*TODO FOR TEST FRAMEWORK
+ *
+ * 1. define TEST_RUN_MODULE(modulename)
+ * 2. implement ABORT_ON_FAIL
+ * 3. increase number of TEST_ARG_N__ and TEST_RSEQ_N__ instances.
+ * 4. increase number of TEST_EXPORT_FUNC__ and TEST_DECLEXPORT_FUNC__ iterations.
+ * 5. restructure CXmlTestSetup.
+ * 6. split CXmlTestSetup to one for internal macros and one for public macros.
+ * 7. Rename CXmlTestSetup to own file id, it will be exported to its own project.
+ * 8. Rename prefix from TEST to something to reflect new file id.
+ * 9. Write quick doc for how to setup testing modules.
+ */
 
 #define TEST_MODULE CXmlStringTest
+TEST_MODULE_BEGIN
 
-/*
-CXmlString *CXmlString_new(const char *str);
-CXmlString *CXmlString_newLen(const char *str, size_t len);
-CXmlString *CXmlString_empty();
+TEST_EXPORT_MODULE_SETUPS();
+TEST_EXPORT_MODULE_TEARDOWNS();
+TEST_EXPORT_TEST_SETUPS();
+TEST_EXPORT_TEST_TEARDOWNS();
 
-size_t CXmlString_len(const CXmlString *str);
-int CXmlString_isEmpty(const CXmlString *str);
+TEST_EXPORT_TESTS(
+    new,
+    newLen_withNeededLen,
+    newLen_withExtraLen,
+    newLen_withLessLen,
+    len_after_new
+);
 
-CXmlString *CXmlString_dup(const CXmlString *str);
-CXmlString *CXmlString_trim(const CXmlString *str);
-
-CXmlString *CXmlString_copy(CXmlString **dest, const CXmlString *src);
-CXmlString *CXmlString_ncopy(CXmlString **dest, const CXmlString *src, size_t len);
-CXmlString *CXmlString_move(CXmlString **dest, const CXmlString *src);
-CXmlString *CXmlString_nmove(CXmlString **dest, const CXmlString *src, size_t len);
-CXmlString *CXmlString_cpcopy(CXmlString **dest, const char *src);
-CXmlString *CXmlString_cpncopy(CXmlString **dest, const char *src, size_t len);
-
-CXmlString *CXmlString_substr(const CXmlString *str, size_t start);
-CXmlString *CXmlString_substrLen(const CXmlString *str, size_t start, size_t len);
-
-int CXmlString_comp(const CXmlString *str1, const CXmlString *str2);
-CXmlString *CXmlString_search(const CXmlString *haystack, const CXmlString *needle);
-CXmlString *CxmlString_cpsearch(const CXmlString *haystack, const char *needle);
-
-int CXmlString_contains(const CXmlString *str, const CXmlString *sterm);
-int CXmlString_cpcontains(const CXmlString *str, const char *sterm);
-int CXmlString_indexOf(const CXmlString *str, const CXmlString *sterm, size_t *index);
-int CXmlString_cpindexOf(const CXmlString *str, const char *sterm, size_t *index);
-
-void CXmlString_free(void *str);
-*/
 
 const char *teststr = "TestString";
 
-TEST_FUNC(new)
+TEST_TEST(new)
 {
     CXmlString *str = CXmlString_new(teststr);
     TEST_ASSERT(str == NULL, "Null after CXmlString_new");
@@ -50,7 +46,7 @@ TEST_FUNC(new)
     TEST_SUCCESS();
 }
 
-TEST_FUNC(newLen_withNeededLen)
+TEST_TEST(newLen_withNeededLen)
 {
     CXmlString *str = CXmlString_newLen(teststr, strlen(teststr));
     TEST_ASSERT(str == NULL, "Null after CXmlString_newLen");
@@ -59,7 +55,7 @@ TEST_FUNC(newLen_withNeededLen)
     TEST_SUCCESS();
 }
 
-TEST_FUNC(newLen_withExtraLen)
+TEST_TEST(newLen_withExtraLen)
 {
     CXmlString *str = CXmlString_newLen(teststr, strlen(teststr)+5);
     TEST_ASSERT(str == NULL, "Null after CXmlString_newLen when extra lengthed");
@@ -68,7 +64,7 @@ TEST_FUNC(newLen_withExtraLen)
     TEST_SUCCESS();
 }
 
-TEST_FUNC(newLen_withLessLen)
+TEST_TEST(newLen_withLessLen)
 {
     CXmlString *str = CXmlString_newLen(teststr, strlen(teststr)-5);
     TEST_ASSERT(str != NULL, "Not Null after CXmlString_newLen when too small length");
@@ -77,7 +73,7 @@ TEST_FUNC(newLen_withLessLen)
     TEST_SUCCESS();
 }
 
-TEST_FUNC(len_after_new)
+TEST_TEST(len_after_new)
 {
     CXmlString *str = CXmlString_new(teststr);
     size_t expected = strlen(teststr);
@@ -90,11 +86,5 @@ TEST_FUNC(len_after_new)
     TEST_SUCCESS();
 }
 
-//#define stringize(x) #x
-TEST_RUNNER()
-{
-    RUN_TEST_FUNC(new);
-}
-END_TEST_RUNNER
-
+TEST_MODULE_END
 #undef TEST_MODULE
