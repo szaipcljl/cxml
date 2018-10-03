@@ -18,7 +18,7 @@ add_library(cxml
         src/utils/CXmlString.h
         src/utils/CXmlQueue.c
         src/utils/CXmlQueue.h
-        )
+        src/utils/CXmlErrno.c)
 
 add_executable(cxmltest test/cxmltest.c test/CXmlStringTest.c test/CXmlStringTest.h test/CXmlTestSetup.h)
 
