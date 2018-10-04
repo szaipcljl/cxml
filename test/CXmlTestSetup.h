@@ -39,9 +39,9 @@
 #define TEST_PCONCWU__(x, y) x##_##y
 #define TEST_CONCWU__(x, y) TEST_PCONCWU__(x,y)
 #define TEST_ESC_PAR__(...) __VA_ARGS__
-#define TEST_IF__1(t, f) t
-#define TEST_IF__0(t, f) f
-#define TEST_IF__(c, t, f) TEST_CONC__(TEST_IF__, c)(TEST_ESC_PAR__(t),TEST_ESC_PAR__(f))
+#define TEST_IF___1(t, f) t
+#define TEST_IF___0(t, f) f
+#define TEST_IF__(c, t, f) TEST_CONCWU__(TEST_IF__, c)(TEST_ESC_PAR__(t),TEST_ESC_PAR__(f))
 #define TEST_PSTRINGIZE__(x) #x
 #define TEST_STRINGIZE__(x) TEST_PSTRINGIZE__(x)
 
