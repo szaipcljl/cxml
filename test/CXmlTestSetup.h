@@ -2,34 +2,53 @@
 #define _CXMLTESTSETUP_H__
 #include <stdio.h>
 
+#ifndef TEST_ABORT_ON_FAIL
+#   define TEST_ABORT_ON_FAIL 0
+#else
+#   undef TEST_ABORT_ON_FAIL
+#   define TEST_ABORT_ON_FAIL 1
+#endif
+
 #define TEST_MODULE_BEGIN TEST_MODULE_BEGIN__
 #define TEST_MODULE_BEGIN__ TEST_DECLFUNC__(void,){}
 #define TEST_MODULE_END TEST_MODULE_END__
 
 #define TEST_FOREACH__(item, array) \
-    for(int array##keep__ = 1, \
-            array##count__ = 0,\
-            array##size__ = sizeof (array) / sizeof *(array); \
-        array##keep__ && array##count__ != array##size__; \
-        array##keep__ = !array##keep__, array##count__++) \
-      for(item = (array)[array##count__]; array##keep__; array##keep__ = !array##keep__)
+    for(int TEST_CONC__(array,keep__) = 1, \
+            TEST_CONC__(array,count__) = 0,\
+            TEST_CONC__(array,size__) = sizeof (array) / sizeof *(array); \
+        TEST_CONC__(array,keep__) && TEST_CONC__(array,count__) != TEST_CONC__(array,size__); \
+        TEST_CONC__(array,keep__) = !TEST_CONC__(array,keep__), TEST_CONC__(array,count__)++) \
+      for(item = (array)[TEST_CONC__(array,count__)]; TEST_CONC__(array,keep__); TEST_CONC__(array,keep__) = !TEST_CONC__(array,keep__))
 
 #define TEST_MODULE_END__ \
     int TEST_CONCWU__(TEST_MODULE, run)(void)\
     {\
+        struct TestResult_ result_ = {0};\
             /*Run module setup functions*/\
-            TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(bmfunc), CXmlStringTest_BMARRAY){ bmfunc(); }\
+            TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(bmfunc), TEST_CONCWU__(TEST_MODULE,BMARRAY)){ bmfunc(); }\
             /*Loop over all test functions*/\
-            TEST_FOREACH__(TEST_TEST_FUNC_PTR__(tfunc), CXmlStringTest_TARRAY){\
+            TEST_FOREACH__(TEST_TEST_FUNC_PTR__(tfunc), TEST_CONCWU__(TEST_MODULE,TARRAY)){\
                 /*Run test setup functions*/\
-                TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(btfunc), CXmlStringTest_BTARRAY){ btfunc(); }\
+                TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(btfunc), TEST_CONCWU__(TEST_MODULE,BTARRAY)){ btfunc(); }\
                 /*Run test function*/\
-                tfunc();\
+                result_.count++;\
+                if(tfunc() != 0){\
+                    if(TEST_ABORT_ON_FAIL){\
+                        TEST_LOG_SEP__();\
+                        TEST_LOGF__("[Module Summary] Module %s failed, aborting test...\n\n",TEST_STRINGIZE__(TEST_MODULE));\
+                        return -1;\
+                    }\
+                    result_.fail++;\
+                }else{\
+                    result_.success++;\
+                }\
                 /*Run test teardown functions*/\
-                TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(atfunc), CXmlStringTest_BTARRAY){ atfunc(); }\
+                TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(atfunc), TEST_CONCWU__(TEST_MODULE,BTARRAY)){ atfunc(); }\
         }\
         /*Run module teardown functions*/\
-        TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(amfunc), CXmlStringTest_AMARRAY){ amfunc(); }\
+        TEST_FOREACH__(TEST_SUTD_FUNC_PTR__(amfunc), TEST_CONCWU__(TEST_MODULE,AMARRAY)){ amfunc(); }\
+        TEST_LOGF__("[Module Summary] Module %s | Tests: %d Success: %d Failed: %d\n", TEST_STRINGIZE__(TEST_MODULE), result_.count, result_.success, result_.fail);\
         return 0;\
     }
 
@@ -107,12 +126,14 @@
     extern int TEST_CONCWU__(modulename, run)(void)
 
 #define TEST_IMPORT_MODULE(modulename)\
-    TEST_IMPORT_MODULE_RUN__(modulename);\
+    TEST_IMPORT_MODULE_RUN__(modulename)
+
+    /*\
     TEST_IMPORT_MODULE__(modulename, TARRAY);\
     TEST_IMPORT_MODULE__(modulename, BTARRAY);\
     TEST_IMPORT_MODULE__(modulename, ATARRAY);\
     TEST_IMPORT_MODULE__(modulename, BMARRAY);\
-    TEST_IMPORT_MODULE__(modulename, AMARRAY)
+    TEST_IMPORT_MODULE__(modulename, AMARRAY)*/
 
 #define TEST_EXPORT_FUNCS__(arrname, type, ...)\
     TEST_DECLEXPORT_FUNC__(type, __VA_ARGS__)\
@@ -173,6 +194,19 @@
     TEST_LOOP___(TEST_DECLEXPORT_FUNC__, TEST_NARG__(__VA_ARGS__), type, __VA_ARGS__)
 /*** END EXPORT LOOPS ***/
 
+/*** IMPORT LOOPS ***/
+#define TEST_IMPORT_MODULE__1(arg) TEST_IMPORT_MODULE(arg)
+#define TEST_IMPORT_MODULE__2(arg, ...) TEST_IMPORT_MODULE(arg); TEST_IMPORT_MODULE__1(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__3(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__2(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__4(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__3(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__5(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__4(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__6(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__5(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__7(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__6(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__8(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__7(__VA_ARGS__)
+#define TEST_IMPORT_MODULE__9(arg, ...) TEST_IMPORT_MODULE(arg) TEST_IMPORT_MODULE__8(__VA_ARGS__)
+
+/*** END IMPORT LOOPS ***/
+
 /*** END MODULE EXPORT ***/
 
         
@@ -182,21 +216,25 @@
 #define TEST_MODULE_SETUP(funcname) TEST_DECLFUNC__(void, funcname)
 #define TEST_MODULE_TEARDOWN(funcname) TEST_DECLFUNC__(void, funcname)
 /*** TEST FAIL/SUCCESS ***/
-
-#define TEST_FAIL(fmt, ...) \
+#define TEST_LOGF__(fmt, ...) printf(fmt, __VA_ARGS__)
+#define TEST_LOG__(msg) TEST_LOGF__("%s", msg)
+#define TEST_LOG_SEP__()\
+    TEST_LOG__("------------------------------------------------------------------\n")
+#define TEST_FFAIL(fmt, ...) \
     do{\
-        printf("[FAILED] %s | "fmt"\n", __func__, __VA_ARGS__);\
-        return 0;\
+        TEST_LOGF__("[FAILED]\t%s:%s | "fmt"\n", TEST_STRINGIZE__(TEST_MODULE), __func__, __VA_ARGS__);\
+        return -1;\
     }while(0)
+#define TEST_FAIL(msg) TEST_FFAIL("%s", msg)
 
-#ifdef CXML_VERBOSE_TESTz
+#ifdef TEST_VERBOSE_PRINT
 #   define TEST_SUCCESS() \
         do{\
-            printf(,"[SUCCESS] %s\n", __func__);\
-            return 1;\
+            TEST_LOGF__("[SUCCESS]\t%s:%s\n", TEST_STRINGIZE__(TEST_MODULE), __func__);\
+            return 0;\
         }while(0)
 #else
-#   define TEST_SUCCESS() return 1;
+#   define TEST_SUCCESS() return 0;
 #endif
 /*** END TEST FAIL/SUCCESS ***/
 
@@ -204,11 +242,16 @@
 #define TEST_ASSERTF(cond, failfmt, ...)            \
     do{                                         \
         if(!(cond)){                            \
-            TEST_FAIL(failfmt, __VA_ARGS__);        \
+            TEST_FFAIL(failfmt, __VA_ARGS__);        \
         }                                       \
     }while(0)
 
 #define TEST_ASSERT(cond, failmsg) TEST_ASSERTF(cond, "%s", failmsg)
 /*** END ASSERT ***/
 
+struct TestResult_{
+    int count;
+    int success;
+    int fail;
+};
 #endif // _CXMLTESTSETUP_H__

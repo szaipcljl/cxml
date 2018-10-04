@@ -1,0 +1,30 @@
+#define TEST_VERBOSE_PRINT
+#define TEST_ABORT_ON_FAIL
+#include "CXmlTestSetup.h"
+
+#define TEST_MODULE TestModule
+TEST_MODULE_BEGIN
+
+TEST_EXPORT_MODULE_SETUPS();
+TEST_EXPORT_MODULE_TEARDOWNS();
+TEST_EXPORT_TEST_SETUPS();
+TEST_EXPORT_TEST_TEARDOWNS();
+TEST_EXPORT_TESTS(
+    SuccessFunc,
+    FailFunc,
+    SuccessFunc
+);
+
+TEST_TEST(SuccessFunc)
+{
+    TEST_SUCCESS();
+}
+
+TEST_TEST(FailFunc)
+{
+    TEST_SUCCESS();
+    //TEST_FAIL("Testing failure");
+}
+
+TEST_MODULE_END
+#undef TEST_MODULE

@@ -1,4 +1,3 @@
-#include "CXmlStringTest.h"
 #include "../src/utils/CXmlString.h"
 #include "CXmlTestSetup.h"
 #include <string.h>
