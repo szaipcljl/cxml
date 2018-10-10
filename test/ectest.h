@@ -5,7 +5,9 @@
  *
  * 1. increase number of TEST_ARG_N__ and TEST_RSEQ_N__ instances.
  * 2. increase number of TEST_EXPORT_FUNC__ and TEST_DECLEXPORT_FUNC__ iterations.
- * 3. Write quick doc for how to setup testing modules.
+ * 3. Document public interface.
+ * 4. Write quick doc for how to setup testing modules. (readme)
+ * 5. Setup CI
  */
 
 #include <stdio.h>
@@ -100,8 +102,33 @@
  * ECT_FFAIL, ECT_FAIL or ECT_SKIP
  */
 #define ECT_SUCCESS() ECT_SUCCESS__()
+/**
+ * @def ECT_SUCCESS()
+ * @brief Use to mark a test case as failed, with format string.
+ * @param fmt printf style format string.
+ * @param ... variadic arguments for the format string.
+ *
+ * Use to mark a test case as failed, with a printf format message style. A test case must always exit using either via
+ * asserts or ECT_SUCCESS, ECT_FFAIL, ECT_FAIL or ECT_SKIP
+ */
 #define ECT_FFAIL(fmt, ...) ECT_FFAIL__(fmt, __VA_ARGS__)
+
+/**
+ * @def ECT_SUCCESS()
+ * @brief Use to mark a test case as failed, providing a message.
+ *
+ * Use to mark a test case as failed, with a provided message. A test case must always exit using either via asserts or
+ * ECT_SUCCESS, ECT_FFAIL, ECT_FAIL or ECT_SKIP
+ */
 #define ECT_FAIL(msg) ECT_FAIL__(msg)
+
+/**
+ * @def ECT_SUCCESS()
+ * @brief Use to mark a test case as skipped.
+ *
+ * Use to mark a test case as skipped. A test case must always exit using either via asserts or ECT_SUCCESS,
+ * ECT_FFAIL, ECT_FAIL or ECT_SKIP
+ */
 #define ECT_SKIP() ECT_SKIP__()
 
 #define ECT_FASSERT(cond, fmt, ...) ECT_FASSERT__(cond, fmt, __VA_ARGS__)
