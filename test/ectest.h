@@ -11,7 +11,6 @@
  */
 
 #include <stdio.h>
-
 /**
  * @file ectest.h
  * @brief Contains everything needed for use of the ECTest testing framework.
@@ -21,7 +20,8 @@
  *
  * Note: Do not use anything under the internal section, those are for internal usage of the ECTest implementation.
  * Use of internal macros, functions or data structures within test modules and runners are considered undefined
- * behaviour in the context of the ECTest testing framework.
+ * behaviour in the context of the ECTest testing framework. Functionality under the internal section may be changed
+ * at any time without notification, unless the changes affect the public interfaces.
  */
 
 /* COMPILE DEFINE INFO
@@ -41,6 +41,11 @@
  *
  * This section contains macros for public use within test modules and runners.
  *
+ * Some macros have a variant that is provides a @ref printf style format string, and takes a variable amount of
+ * arguments, instead of a fixed message. These macros has the same name as their fixed message equivalents, with the
+ * exception that they start with ECT_F<rest of name> instead of ECT_<rest of name>. These macros are not documented
+ * as they follow the same behaviour as their fixed message equivalents.
+ *
  * Only use macros within this section when writing tests, the usage of macros/functions/data structures under the
  * internal section is considered undefined behaviour in the context of using the ECTest testing framework.
  */
@@ -51,12 +56,21 @@
 
 #define ECT_EXPORT_MODULE(modulename) ECT_EXPORT_MODULE__(modulename)
 
+/**
+ * @defgroup TESTDECL Test Function Declaration Macros
+ * @{
+ */
 #define ECT_DECLARE_TESTS(...) ECT_DECLARE_TESTS__(__VA_ARGS__)
 #define ECT_DECLARE_BEFORE_MODULE(...) ECT_DECLARE_BEFORE_MODULE__(__VA_ARGS__)
 #define ECT_DECLARE_AFTER_MODULE(...) ECT_DECLARE_AFTER_MODULE__(__VA_ARGS__)
 #define ECT_DECLARE_BEFORE_TEST(...) ECT_DECLARE_BEFORE_TEST__(__VA_ARGS__)
 #define ECT_DECLARE_AFTER_TEST(...) ECT_DECLARE_AFTER_TEST__(__VA_ARGS__)
+/**@}*/
 
+/**
+ * @defgroup TESTDEF Test Function Definition Macros
+ * @{
+ */
 /**
  * @def ECT_TEST(funcname)
  * @brief Defines a function suitable for use as an ECTest test case.
@@ -93,7 +107,12 @@
  * @param funcname The name of the function (Do not quote as string)
  */
 #define ECT_AFTER_MODULE(funcname) ECT_AFTER_MODULE__(funcname)
+/**@}*/
 
+/**
+ * @defgroup TESTRESULT Test Result Macros
+ * @{
+ */
 /**
  * @def ECT_SUCCESS()
  * @brief Use to mark a test case as successful.
@@ -102,43 +121,165 @@
  * ECT_FFAIL, ECT_FAIL or ECT_SKIP
  */
 #define ECT_SUCCESS() ECT_SUCCESS__()
-/**
- * @def ECT_SUCCESS()
- * @brief Use to mark a test case as failed, with format string.
- * @param fmt printf style format string.
- * @param ... variadic arguments for the format string.
- *
- * Use to mark a test case as failed, with a printf format message style. A test case must always exit using either via
- * asserts or ECT_SUCCESS, ECT_FFAIL, ECT_FAIL or ECT_SKIP
- */
-#define ECT_FFAIL(fmt, ...) ECT_FFAIL__(fmt, __VA_ARGS__)
 
 /**
- * @def ECT_SUCCESS()
+ * @def ECT_FAIL()
  * @brief Use to mark a test case as failed, providing a message.
  *
  * Use to mark a test case as failed, with a provided message. A test case must always exit using either via asserts or
  * ECT_SUCCESS, ECT_FFAIL, ECT_FAIL or ECT_SKIP
  */
 #define ECT_FAIL(msg) ECT_FAIL__(msg)
+#define ECT_FFAIL(fmt, ...) ECT_FFAIL__(fmt, __VA_ARGS__)
 
 /**
- * @def ECT_SUCCESS()
+ * @def ECT_SKIP()
  * @brief Use to mark a test case as skipped.
  *
  * Use to mark a test case as skipped. A test case must always exit using either via asserts or ECT_SUCCESS,
  * ECT_FFAIL, ECT_FAIL or ECT_SKIP
  */
 #define ECT_SKIP() ECT_SKIP__()
+/**@}*/
+/**
+ * @defgroup ASSERT Test Assert Macros
+ * @{
+ */
+/**
+ * @def ECT_ASSERT(expr, msg)
+ * @brief Evaluates the expression. If it evaluates to true, the test continues, else it fails as if @ref ECT_FAIL had
+ * been called.
+ * @param expr The expression to evaluate.
+ * @param msg The message to print on failed assert.
+ */
+#define ECT_ASSERT(expr, msg) ECT_ASSERT__(expr, msg)
+#define ECT_FASSERT(expr, fmt, ...) ECT_FASSERT__(expr, fmt, __VA_ARGS__)
 
-#define ECT_FASSERT(cond, fmt, ...) ECT_FASSERT__(cond, fmt, __VA_ARGS__)
-#define ECT_ASSERT(cond, msg) ECT_ASSERT__(cond, msg)
+/**
+ * @def ECT_ASSERT_TRUE(expr, msg)
+ * @brief Alias for @ref ECT_ASSERT.
+ */
+#define ECT_ASSERT_TRUE(expr, msg) ECT_ASSERT(expr, msg)
+#define ECT_FASSERT_TRUE(expr, fmt, ...) ECT_FASSERT(expr, fmt, __VA_ARGS__)
 
+/**
+ * @def ECT_ASSERT_FALSE(expr, msg)
+ * @brief Evaluates the expression. If it evaluates to false, the test continues, else it fails as if @ref ECT_FAIL had
+ * been called.
+ * @param expr The expression to evaluate.
+ * @param msg The message to print on failed assert.
+ */
+#define ECT_ASSERT_FALSE(expr, msg) ECT_ASSERT(!(expr), msg)
+#define ECT_FASSERT_FALSE(expr, fmt, ...) ECT_FASSERT(!(expr), fmt, __VA_ARGS__)
+
+/**
+ * @def ECT_ASSERT_CONTAINS(array, item, cmpfunc, msg)
+ * @brief Checks whether the array contains the item using the compare function. If not, it fails the test case and
+ * prints the message specified.
+ * @param array The array to check.
+ * @param item The item to look for.
+ * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
+ *                integer. The function should return 1 if the items compare equal; else 0.
+ * @param msg The message to print on failed assert.
+ */
+//TODO IMPLEMENT
+#define ECT_ASSERT_CONTAINS(array, item, cmpfunc, msg)
+#define ECT_FASSERT_CONTAINS(array, item, cmpfunc, fmt, ...)
+
+/**
+ * @def ECT_ASSERT_NOT_CONTAINS(array, item, cmpfunc, msg)
+ * @brief Checks whether the array contains the item using the compare function. If it does, it fails the test case and
+ * prints the message specified.
+ * @param array The array to check.
+ * @param item The item to look for.
+ * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
+ *                integer. The function should return 1 if the items compare equal; else 0.
+ * @param msg The message to print on failed assert.
+ */
+//TODO IMPLEMENT
+#define ECT_ASSERT_NOT_CONTAINS(array, item, cmpfunc, msg)
+#define ECT_FASSERT_NOT_CONTAINS(array, item, cmpfunc, fmt, ...)
+
+/**
+ * @def ECT_ASSERT_CONTAINSN(array, item, noccurence, cmpfunc, msg)
+ * @brief Checks whether the array contains the item using the compare function, the same way that
+ *        @ref ECT_ASSERT_CONTAINS does, but with the addition of checking whether the item occurs as many times as
+ *        specified. If it does not, it fails the test case and prints the message specified.
+ * @param array The array to check.
+ * @param item The item to look for.
+ * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
+ *                integer. The function should return 1 if the items compare equal; else 0.
+ * @param msg The message to print on failed assert.
+ */
+//TODO IMPLEMENT
+#define ECT_ASSERT_CONTAINSN(array, item, noccurence, cmpfunc, msg)
+#define ECT_FASSERT_CONTAINSN(array, item, noccurence, cmpfunc, fmt, ...)
+
+//TODO add ECT_ASSERT_DCONTAINS, ECT_ASSERT_NOT_DCONTAINS and ECT_ASSERT_DCONTAINSN for dynamic arrays.
+/**@}*/
+
+/**
+ * @defgroup UTILITIES Testing Utility Macros
+ * @{
+ */
+/**
+ * @def ECT_NO_SETUP
+ * @brief Used in @ref ECT_DECLARE_BEFORE_TEST and @ref ECT_DECLARE_BEFORE_MODULE when there are no setup functions.
+ */
 #define ECT_NO_SETUP ECT_NO_SETUP__
+
+/**
+ * @def ECT_NO_TEARDOWN
+ * @brief Used in @ref ECT_DECLARE_AFTER_TEST and @ref ECT_DECLARE_AFTER_MODULE when there are no teardown functions.
+ */
 #define ECT_NO_TEARDOWN ECT_NO_TEARDOWN__
+
+/**
+ * @def ECT_ARRAY_FOREACH(item, array)
+ * @brief Utility macro for looping over each element in an array.
+ * @param item The item yielded for each iteration.
+ * @param array The array to loop over.
+ * Loops over each element in an array. Note that it has to be an array, for pointers to arrays/dynamic arrays, see
+ * @ref ECT_DARRAY_FOREACH.
+ */
+#define ECT_ARRAY_FOREACH(item, array) ECT_FOREACH__(item, array)
+
+/**
+ * @def ECT_DARRAY_FOREACH(item, array, size)
+ * @brief Utility macro for looping over each element in an dynamic array or a pointer to a array.
+ * @param item The item yielded for each iteration.
+ * @param array The array to loop over.
+ * @param nelem The number of elements in @p array.
+ */
+//TODO IMPLEMENT
+#define ECT_DARRAY_FOREACH(item, array, nelem)
+
+/**
+ * @def ECT_LLIST_FOREACH(item, list, nextname)
+ * @brief Utility macro to walk through each node in a non circular linked list.
+ * @param node The list node yielded for each iteration.
+ * @param list The list to walk through
+ * @param nextname The name of the member that points ot the next node.
+ * Walks through each node in a non circular linked list. In case of lists with a head-specific structure, the first
+ * actual item-node must be supplied as @p list.
+ * @p nextname should be the name of the member, in a list node, that points ot the next node. 
+ */
+//TODO IMPLEMENT
+#define ECT_LLIST_FOREACH(node, list, nextname)
+
+/**@}*/
 
 /* END PUBLIC MACROS */
 
+
+
+
+
+
+
+
+
+/// @cond INTERNAL
 /* INTERNAL
  *
  * This section contains macros/functions/data structures for internal usage within the ECTest framework. Do NOT use
@@ -431,7 +572,7 @@
         }                                       \
     }while(0)
 
-#define ECT_ASSERT__(cond, failmsg) ECT_FASSERT(cond, "%s", failmsg)
+#define ECT_ASSERT__(cond, failmsg) ECT_FASSERT__(cond, "%s", failmsg)
 /*** END ASSERT ***/
 
 /*** RESULT STRUCTS AND DUMMY FUNCTIONS ***/
@@ -452,5 +593,5 @@ static inline void ect_nosetupteardown__(void){}
 #define ECT_NO_SETUP__ ect_nosetupteardown__
 #define ECT_NO_TEARDOWN__ ect_nosetupteardown__
 /*** END RESULT STRUCTS AND DUMMY FUNCTIONS ***/
-
+/// @endcond
 #endif // _ECTEST_H__
