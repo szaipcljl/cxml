@@ -5,7 +5,6 @@
  *
  * 1. increase number of TEST_ARG_N__ and TEST_RSEQ_N__ instances.
  * 2. increase number of TEST_EXPORT_FUNC__ and TEST_DECLEXPORT_FUNC__ iterations.
- * 3. Document public interface.
  * 4. Write quick doc for how to setup testing modules. (readme)
  * 5. Setup CI
  */
