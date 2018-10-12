@@ -11,6 +11,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+
 /**
  * @file ectest.h
  * @brief Contains everything needed for use of the ECTest testing framework.
@@ -18,7 +20,7 @@
  * This files contains all macros, data structures and functionality that make up the ECTest testing framework.
  * To use ECTest, include this file and utilize the macros defined under the public section.
  *
- * Note: Do not use anything under the internal section, those are for internal usage of the ECTest implementation.
+ * @note Do not use anything under the internal section, those are for internal usage of the ECTest implementation.
  * Use of internal macros, functions or data structures within test modules and runners are considered undefined
  * behaviour in the context of the ECTest testing framework. Functionality under the internal section may be changed
  * at any time without notification, unless the changes affect the public interfaces.
@@ -29,7 +31,7 @@
  * ETC_ABORT_ON_FAIL
  * To abort testing upon test case failure, compile with -DETC_ABORT_ON_FAIL=1
  *
- * ETC_LOG_LEVEL
+ * ECT_LOG_LEVEL
  * Choose what level of test completion logging should be done (success/skipped/failed).
  * Compile with -DETC_LOG_LEVEL=3 for all (default)
  * Compile with -DETC_LOG_LEVEL=2 for failed and skipped only.
@@ -50,20 +52,127 @@
  * internal section is considered undefined behaviour in the context of using the ECTest testing framework.
  */
 
-#define ECT_IMPORT_MODULE(modulename) ECT_IMPORT_MODULE__(modulename)
-#define ECT_IMPORT_MODULES(...) ECT_IMPORT_MODULES__(__VA_ARGS__)
+/**
+ * @defgroup TESTRUNCREATE Test Module Runner macros
+ * @brief These macros are used to create test module runners.
+ * @{
+ */
+/**
+ * @def ECT_RUNNER(...)
+ * @brief A full pre-implemented test module runner.
+ * @param ... The names of the test modules to import and run. (Do not quote as strings)
+ *
+ * A full pre-implemented test module runner, combining the usage of @ref ECT_IMPORT_MODULES, @ref ECT_RUNNER_START,
+ * @ref ECT_RUN_MODULE (for each module) and @ref ECT_RUNNER_END. This macro will generate a test program entry point,
+ * i.e. a @c main function.
+ *
+ * @note It is preferred that this macro be used to create test module runners, unless custom run behaviour is needed.
+ */
+ //TODO IMPLEMENT
+#define ECT_RUNNER(...)
+
+/**
+ * @def ECT_RUNNER_START()
+ * @brief Marks the beginning of a test program entry point, i.e. a @c main function, in a test module runner.
+ * @note Must be matched with a reachable closing @ref ECT_RUNNER_END, else behaviour is undefined.
+ */
+ //TODO IMPLEMENT
+#define ECT_RUNNER_START()
+
+/**
+ * @def ECT_RUNNER_END()
+ * @brief Marks the end of a test program entry point, i.e. a @c main function, in a test module runner.
+ */
+ //TODO IMPLEMENT
+#define ECT_RUNNER_END()
+
+/**
+ * @def ECT_RUN_MODULE(modulename)
+ * @brief Runs the specified test module.
+ * @param modulename The name of the test module to run. (Do not quote as string)
+ * @note The test module must have been previously imported using @ref ETC_IMPORT_MODULE or @ref ETC_IMPORT_MODULES.
+ */
 #define ECT_RUN_MODULE(modulename) ECT_RUN_MODULE__(modulename)
 
+/**
+ *  @def ECT_IMPORT_MODULE(modulename)
+ *  @brief Imports a test module, making it visible within a test runner.
+ *  @param modulename The name of the module to import (Do not quote as string)
+ *  @note Modules must be imported before the definition of the test program entry point, i.e. the @c main function.
+ */
+#define ECT_IMPORT_MODULE(modulename) ECT_IMPORT_MODULE__(modulename)
+
+/**
+ *  @def ECT_IMPORT_MODULES(...)
+ *  @brief Imports test modules, making them visible within a test runner.
+ *  @param ... The names of the modules to import (Do not quote as strings)
+ *  @note Modules must be imported before the definition of the test program entry point, i.e. the @c main function.
+ */
+#define ECT_IMPORT_MODULES(...) ECT_IMPORT_MODULES__(__VA_ARGS__)
+
+/**@}*/
+
+/**
+ * @defgroup TESTMODCREATE Test Module Macros
+ * @brief Macros for defining test module components.
+ * @{
+ */
+ /**
+  * @ðef ECT_EXPORT_MODULE(modulename)
+  * @brief Exports the module, along with all declared tests/setups/teardowns, making it visible for test runners.
+  * @param modulename The name of the module. (Do not quote as string)
+  *
+  * Exports the module, making it visible for external usage. This is required within a test module to make it a valid
+  * test module, since test runners won't be able to use it else. Must occur AFTER test/setup/teardown declarations.
+  */
 #define ECT_EXPORT_MODULE(modulename) ECT_EXPORT_MODULE__(modulename)
 
 /**
  * @defgroup TESTDECL Test Function Declaration Macros
  * @{
  */
+/**
+ * @def ECT_DECLARE_TESTS(...)
+ * @brief Declares which tests in the test module should be visible to test runners.
+ * @param ... The names of the tests (Do not quote as strings)
+ * @note This macro is required in a valid test module, and should be placed before @ref ECT_EXPORT_MODULE.
+ */
 #define ECT_DECLARE_TESTS(...) ECT_DECLARE_TESTS__(__VA_ARGS__)
+
+/**
+ * @def ECT_DECLARE_BEFORE_MODULE(...)
+ * @brief Declares which module setups in the test module should be visible to test runners.
+ * @param ... The names of the module setups. (Do not quote as strings)
+ * @note This macro is required in a valid test module, and should be placed before @ref ECT_EXPORT_MODULE.
+ * @note If no module setups is to be used, supply @ref ECT_NO_SETUP as argument.
+ */
 #define ECT_DECLARE_BEFORE_MODULE(...) ECT_DECLARE_BEFORE_MODULE__(__VA_ARGS__)
+
+/**
+ * @def ECT_DECLARE_AFTER_MODULE(...)
+ * @brief Declares which module teardowns in the test module should be visible to test runners.
+ * @param ... The names of the module teardowns. (Do not quote as strings)
+ * @note This macro is required in a valid test module, and should be placed before @ref ECT_EXPORT_MODULE.
+ * @note If no module teardowns is to be used, supply @ref ECT_NO_TEARDOWN as argument.
+ */
 #define ECT_DECLARE_AFTER_MODULE(...) ECT_DECLARE_AFTER_MODULE__(__VA_ARGS__)
+
+/**
+ * @def ECT_DECLARE_BEFORE_TEST(...)
+ * @brief Declares which test setups in the test module should be visible to test runners.
+ * @param ... The names of the test setups. (Do not quote as strings)
+ * @note This macro is required in a valid test module, and should be placed before @ref ECT_EXPORT_MODULE.
+ * @note If no test setups is to be used, supply @ref ECT_NO_SETUP as argument.
+ */
 #define ECT_DECLARE_BEFORE_TEST(...) ECT_DECLARE_BEFORE_TEST__(__VA_ARGS__)
+
+/**
+ * @def ECT_DECLARE_AFTER_TEST(...)
+ * @brief Declares which test teardowns in the test module should be visible to test runners.
+ * @param ... The names of the test teardowns. (Do not quote as strings)
+ * @note This macro is required in a valid test module, and should be placed before @ref ECT_EXPORT_MODULE.
+ * @note If no test teardowns is to be used, supply @ref ECT_NO_TEARDOWN as argument.
+ */
 #define ECT_DECLARE_AFTER_TEST(...) ECT_DECLARE_AFTER_TEST__(__VA_ARGS__)
 /**@}*/
 
@@ -141,6 +250,7 @@
  */
 #define ECT_SKIP() ECT_SKIP__()
 /**@}*/
+
 /**
  * @defgroup ASSERT Test Assert Macros
  * @{
@@ -174,48 +284,100 @@
 
 /**
  * @def ECT_ASSERT_CONTAINS(array, item, cmpfunc, msg)
- * @brief Checks whether the array contains the item using the compare function. If not, it fails the test case and
- * prints the message specified.
+ * @brief Checks whether the array contains the item, using the compare function.
  * @param array The array to check.
  * @param item The item to look for.
  * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
  *                integer. The function should return 1 if the items compare equal; else 0.
  * @param msg The message to print on failed assert.
+ *
+ * Checks whether the array contains the item, using the compare function. If not, it fails the test case and
+ * prints the message specified.
  */
-//TODO IMPLEMENT
-#define ECT_ASSERT_CONTAINS(array, item, cmpfunc, msg)
-#define ECT_FASSERT_CONTAINS(array, item, cmpfunc, fmt, ...)
+#define ECT_ASSERT_CONTAINS(array, item, cmpfunc, msg) ECT_ASSERT_CONTAINS__(array, item, cmpfunc, msg)
+#define ECT_FASSERT_CONTAINS(array, item, cmpfunc, fmt, ...) ECT_FASSERT_CONTAINS__(array, item, cmpfunc, fmt, __VA_ARGS__)
 
 /**
  * @def ECT_ASSERT_NOT_CONTAINS(array, item, cmpfunc, msg)
- * @brief Checks whether the array contains the item using the compare function. If it does, it fails the test case and
- * prints the message specified.
+ * @brief Checks whether the array contains the item, using the compare function.
  * @param array The array to check.
  * @param item The item to look for.
  * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
  *                integer. The function should return 1 if the items compare equal; else 0.
  * @param msg The message to print on failed assert.
+ *
+ * Checks whether the array contains the item, using the compare function. If it does, it fails the test case and
+ * prints the message specified.
  */
-//TODO IMPLEMENT
-#define ECT_ASSERT_NOT_CONTAINS(array, item, cmpfunc, msg)
-#define ECT_FASSERT_NOT_CONTAINS(array, item, cmpfunc, fmt, ...)
+#define ECT_ASSERT_NOT_CONTAINS(array, item, cmpfunc, msg) ECT_ASSERT_NOT_CONTAINS__(array, item, cmpfunc, msg)
+#define ECT_FASSERT_NOT_CONTAINS(array, item, cmpfunc, fmt, ...) ECT_FASSERT_NOT_CONTAINS__(array, items, cmpfunc, fmt, __VA_ARGS__)
 
 /**
  * @def ECT_ASSERT_CONTAINSN(array, item, noccurence, cmpfunc, msg)
- * @brief Checks whether the array contains the item using the compare function, the same way that
- *        @ref ECT_ASSERT_CONTAINS does, but with the addition of checking whether the item occurs as many times as
- *        specified. If it does not, it fails the test case and prints the message specified.
+ * @brief Checks whether the array contains N occurences of the item, using the compare function.
  * @param array The array to check.
  * @param item The item to look for.
+ * @param noccurence The number of times that the item must occur to validate the test.
  * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
  *                integer. The function should return 1 if the items compare equal; else 0.
  * @param msg The message to print on failed assert.
+ *
+ * Checks whether the array contains N occurences of the item, using the compare function. If it does not, it fails the
+ * test case and prints the message specified.
  */
-//TODO IMPLEMENT
-#define ECT_ASSERT_CONTAINSN(array, item, noccurence, cmpfunc, msg)
-#define ECT_FASSERT_CONTAINSN(array, item, noccurence, cmpfunc, fmt, ...)
+#define ECT_ASSERT_CONTAINSN(array, item, noccurence, cmpfunc, msg) ECT_ASSERT_CONTAINSN__(array, item, noccurence, cmpfunc, msg)
+#define ECT_FASSERT_CONTAINSN(array, item, noccurence, cmpfunc, fmt, ...) ECT_FASSERT_CONTAINSN__(array, item, noccurence, cmpfunc, fmt, __VA_ARGS__)
 
-//TODO add ECT_ASSERT_DCONTAINS, ECT_ASSERT_NOT_DCONTAINS and ECT_ASSERT_DCONTAINSN for dynamic arrays.
+/**
+ * @def ECT_ASSERT_DCONTAINS(array, size, item, cmpfunc, msg)
+ * @brief Checks whether the dynamic/pointer array contains the item, using the compare function.
+ * @param array The array to check (dynamic or pointer to array).
+ * @param nelem The number of elements in @p array.
+ * @param item The item to look for.
+ * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
+ *                integer. The function should return 1 if the items compare equal; else 0.
+ * @msg The message to print on failed assert.
+ *
+ * Checks whether the dynamic/pointer array contains the item, using the compare function. If it does not, it fails the
+ * test case and prints the message specified.
+ */
+#define ECT_ASSERT_DCONTAINS(array, nelem, item, cmpfunc, msg) ECT_ASSERT_DCONTAINS__(array, nelem, item, cmpfunc, msg)
+#define ECT_FASSERT_DCONTAINS(array, nelem, item, cmpfunc, fmt, ...) ECT_FASSERT_DCONTAINS__(array, nelem, item, cmpfunc, fmt, __VA_ARGS__)
+
+/**
+ * @def ECT_ASSERT_NOT_DCONTAINS(array, size, item, cmpfunc, msg)
+ * @brief Checks whether the dynamic/pointer array contains the item, using the compare function.
+ * @param array The array to check (dynamic or pointer to array).
+ * @param nelem The number of elements in @p array.
+ * @param item The item to look for.
+ * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
+ *                integer. The function should return 1 if the items compare equal; else 0.
+ * @msg The message to print on failed assert.
+ *
+ * Checks whether the dynamic/pointer array contains the item, using the compare function. If it does, it fails the
+ * test case and prints the message specified.
+ */
+#define ECT_ASSERT_NOT_DCONTAINS(array, nelem, item, cmpfunc, msg) ECT_ASSERT_NOT_DCONTAINS__(array, nelem, item, cmpfunc, msg)
+#define ECT_FASSERT_NOT_DCONTAINS(array, nelem, item, cmpfunc, fmt, ...) ECT_FASSERT_NOT_DCONTAINS__(array, nelem, item, cmpfunc, fmt, __VA_ARGS__)
+
+/**
+ * @def ECT_ASSERT_DCONTAINSN(array, nelem, item, noccurence, cmpfunc, msg)
+ * @brief Checks whether the dynamic/pointer array contains N occurences of the item, using the compare function.
+ * @param array The array to check (dynamic or pointer to array).
+ * @param nelem The number of elements in @p array.
+ * @param item The item to look for.
+ * @param noccurence The number of times that the item must occur to validate the test.
+ * @param cmpfunc The comparator function. Must be a function that takes two items of the type of @item and returns a
+ *                integer. The function should return 1 if the items compare equal; else 0.
+ * @param msg The message to print on failed assert.
+ *
+ * Checks whether the dynamic/pointer array contains N occurences of the item, using the compare function. If it does
+ * not, it fails the test case and prints the message specified.
+ */
+#define ECT_ASSERT_DCONTAINSN(array, nelem, item, noccurence, cmpfunc, msg) ECT_ASSERT_DCONTAINSN__(array, nelem, item, noccurence, cmpfunc, msg)
+#define ECT_FASSERT_DCONTAINSN(array, nelem, item, noccurence, cmpfunc, fmt, ...) ECT_FASSERT_DCONTAINSN__(array, nelem, item, noccurence, cmpfunc, fmt, __VA_ARGS__)
+
+/**@}*/
 /**@}*/
 
 /**
@@ -225,12 +387,14 @@
 /**
  * @def ECT_NO_SETUP
  * @brief Used in @ref ECT_DECLARE_BEFORE_TEST and @ref ECT_DECLARE_BEFORE_MODULE when there are no setup functions.
+ * @ingroup TESTMODCREATE
  */
 #define ECT_NO_SETUP ECT_NO_SETUP__
 
 /**
  * @def ECT_NO_TEARDOWN
  * @brief Used in @ref ECT_DECLARE_AFTER_TEST and @ref ECT_DECLARE_AFTER_MODULE when there are no teardown functions.
+ * @ingroup TESTMODCREATE
  */
 #define ECT_NO_TEARDOWN ECT_NO_TEARDOWN__
 
@@ -239,6 +403,7 @@
  * @brief Utility macro for looping over each element in an array.
  * @param item The item yielded for each iteration.
  * @param array The array to loop over.
+ *
  * Loops over each element in an array. Note that it has to be an array, for pointers to arrays/dynamic arrays, see
  * @ref ECT_DARRAY_FOREACH.
  */
@@ -260,9 +425,11 @@
  * @param node The list node yielded for each iteration.
  * @param list The list to walk through
  * @param nextname The name of the member that points ot the next node.
+ *
  * Walks through each node in a non circular linked list. In case of lists with a head-specific structure, the first
  * actual item-node must be supplied as @p list.
- * @p nextname should be the name of the member, in a list node, that points ot the next node. 
+ *
+ * @note @p nextname should be the name of the member, in a list node, that points ot the next node.
  */
 //TODO IMPLEMENT
 #define ECT_LLIST_FOREACH(node, list, nextname)
@@ -270,8 +437,6 @@
 /**@}*/
 
 /* END PUBLIC MACROS */
-
-
 
 
 
@@ -290,8 +455,8 @@
  * the context of using the ECTest framework.
  */
 
-#ifndef ETC_LOG_LEVEL
-#   define ETC_LOG_LEVEL 3
+#ifndef ECT_LOG_LEVEL
+#   define ECT_LOG_LEVEL 3
 #endif
 
 #ifdef __unix__
@@ -329,6 +494,11 @@
         }while(0),\
         ECT_MODULE_RUNNER__(modulename)();\
     )
+
+#define ECT_RUNNER_START__ \
+
+#define ECT_RUNNER_END__ \
+    etc_runner_eval__:
 
 /*** UTILITY MACROS ***/
 #define ECT_PCON__(x, y) x##y
@@ -410,20 +580,34 @@
                 ECT_FOREACH__(ECT_FUNC_PTR__(void, btfunc), BTARRAY){ btfunc(); }\
                 /*Run test function*/\
                 result_.count++;\
-                switch(tfunc()){\
+                ect_caseresult caseresult_ = tfunc();\
+                switch(caseresult_.result){\
                     case ECT_CASERES_SUCCESS:{\
                         result_.success++;\
+                        ECT_IF__(ETC_LOG_SUCCESS__,\
+                            ECT_FLOG__("["ECT_PRINT_WITH_COLOR__(ECT_KGRN__,"SUCCESS")"]\t%s.%s\n",\
+                                    ECT_STRINGIZE__(modulename), \
+                                    caseresult_.testname),);\
                     }break;\
                     case ECT_CASERES_FAILED:{\
-                        if(ECT_ABORT_ON_FAIL){\
+                        result_.failed++;\
+                        ECT_IF__(ETC_LOG_FAIL__,\
+                            ECT_FLOG__("["ECT_PRINT_WITH_COLOR__(ECT_KRED__, "FAILED")"]\t%s.%s | %s\n",\
+                                    ECT_STRINGIZE__(modulename),\
+                                    caseresult_.testname,\
+                                    caseresult_.msg);\
+                            free(caseresult_.msg);,)\
+                        ECT_IF__(ECT_ABORT_ON_FAIL,\
                             ECT_LOG_SEP__();\
                             ECT_FLOG__("[Module Summary] Module '%s' failed, aborting test...\n\n",ECT_STRINGIZE__(modulename));\
-                            return result_;\
-                        }\
-                        result_.failed++;\
+                            return result_;,)\
                     }break;\
                     case ECT_CASERES_SKIPPED:{\
                         result_.skipped++;\
+                        ECT_IF__(ETC_LOG_SKIP__,\
+                            ECT_FLOG__("["ECT_PRINT_WITH_COLOR__(ECT_KYEL__,"SKIPPED")"]\t%s.%s\n",\
+                                    ECT_STRINGIZE__(modulename), \
+                                    caseresult_.testname);,)\
                     }break;\
                 }\
                 /*Run test teardown functions*/\
@@ -531,37 +715,46 @@
 /*** END LOGGING ***/
 
 /*** TEST CASE EXITS ***/
-#if ETC_LOG_LEVEL >= 1
-#   define ECT_FFAIL__(fmt, ...) \
-        do{\
-            ECT_FLOG__("["ECT_PRINT_WITH_COLOR__(ECT_KRED__, "FAILED")"]\t%s | "fmt"\n", __func__, __VA_ARGS__);\
-            return ECT_CASERES_FAILED;\
-        }while(0)
+#define ECT_CASERES__(caseresult, resmsg) (ect_caseresult){.result = caseresult, .testname = __func__, .msg = resmsg}
+
+#if ECT_LOG_LEVEL >= 1
+#   define ETC_LOG_FAIL__ 1
+#   ifdef _GNU_SOURCE
+#       define ECT_FFAIL__(fmt, ...) \
+            do{\
+                char *ect_failmsg_;\
+                asprintf(&ect_failmsg_, fmt, __VA_ARGS__);\
+                return ECT_CASERES__(ECT_CASERES_FAILED, ect_failmsg_);\
+            }while(0)
+#   else
+#       define ECT_FFAIL__(fmt, ...) \
+            do{\
+                int ect_failmsgsize_ = snprintf(NULL, 0, fmt, __VA_ARGS__);\
+                char *ect_failmsg_ = malloc(ect_failmsgsize_+1);\
+                snprintf(ect_failmsg_, ect_failmsgsize_+1, fmt, __VA_ARGS__);\
+                return ECT_CASERES__(ECT_CASERES_FAILED, ect_failmsg_);\
+            }while(0)
+#   endif
 #else
-#   define ECT_FFAIL__(fmt, ...) return ECT_CASERES_FAILED
+#   define ETC_LOG_FAIL__ 0
+#   define ECT_FFAIL__(fmt, ...) return ECT_CASERES__(ECT_CASERES_FAILED, NULL)
 #endif
 
-#define ECT_FAIL__(msg) ECT_FFAIL("%s", msg)
+#define ECT_FAIL__(msg) ECT_FFAIL__("%s", msg)
 
-#if ETC_LOG_LEVEL >= 2
-#   define ECT_SKIP__() \
-        do{\
-            ECT_FLOG__("["ECT_PRINT_WITH_COLOR__(ECT_KYEL__,"SKIPPED")"]\t%s\n", __func__);\
-            return ECT_CASERES_SKIPPED;\
-        }while(0)
+#if ECT_LOG_LEVEL >= 2
+#   define ETC_LOG_SKIP__ 1
 #else
-#   define ECT_SKIP__() return ECT_CASERES_SKIPPED
+#   define ETC_LOG_SKIP__ 0
 #endif
+#define ECT_SKIP__() return ECT_CASERES__(ECT_CASERES_SKIPPED, NULL)
 
-#if ETC_LOG_LEVEL >= 3
-#   define ECT_SUCCESS__() \
-        do{\
-            ECT_FLOG__("["ECT_PRINT_WITH_COLOR__(ECT_KGRN__,"SUCCESS")"]\t%s\n", __func__);\
-            return ECT_CASERES_SUCCESS;\
-        }while(0)
+#if ECT_LOG_LEVEL >= 3
+#   define ETC_LOG_SUCCESS__ 1
 #else
-#   define ECT_SUCCESS__() return ECT_CASERES_SUCCESS
+#   define ETC_LOG_SUCCESS__ 0
 #endif
+#define ECT_SUCCESS__() return ECT_CASERES__(ECT_CASERES_SUCCESS, NULL)
 /*** END TEST CASE EXITS ***/
 
 /*** ASSERT ***/
@@ -573,6 +766,61 @@
     }while(0)
 
 #define ECT_ASSERT__(cond, failmsg) ECT_FASSERT__(cond, "%s", failmsg)
+
+#define ECT_FASSERT_DCONTAINS__(array, nelem, item, cmpfunc, fmt, ...)\
+    do{\
+        size_t ect_ac_arrsize_ = nelem;\
+        int ect_ac_found_ = 0;\
+        for(size_t ect_ac_ind_ = 0; ect_ac_ind_ < ect_ac_arrsize_; ect_ac_ind_++){\
+            if(cmpfunc(item, array[i])){\
+                ect_ac_found_ = 1;\
+                break;\
+            }\
+        }\
+        if(!ect_ac_found_){\
+            ECT_FFAIL(fmt, __VA_ARGS__);\
+        }\
+    }
+#define ECT_ASSERT_DCONTAINS__(array, nelem, item, cmpfunc, msg) ECT_FASSERT_DCONTAINS__(array, nelem, item, cmpfunc, "%s", msg)
+#define ECT_FASSERT_CONTAINS__(array, item, cmpfunc, fmt, ...) ECT_FASSERT_DCONTAINS__(array, ECT_SIZEOFARRAY__(array), item, cmpfunc, fmt, __VA_ARGS__)
+#define ECT_ASSERT_CONTAINS__(array, item, cmpfunc, msg) ECT_FASSERT_CONTAINS__(array, item, cmpfunc, "%s", msg)
+
+#define ECT_FASSERT_NOT_DCONTAINS__(array, nelem, item, cmpfunc, fmt, ...)\
+    do{\
+        size_t ect_ac_arrsize_ = nelem;\
+        int ect_ac_found_ = 0;\
+        for(size_t ect_ac_ind_ = 0; ect_ac_ind_ < ect_ac_arrsize_; ect_ac_ind_++){\
+            if(cmpfunc(item, array[i])){\
+                ect_ac_found_ = 1;\
+                break;\
+            }\
+        }\
+        if(ect_ac_found_){\
+            ECT_FFAIL(fmt, __VA_ARGS__);\
+        }\
+    }
+#define ECT_ASSERT_NOT_DCONTAINS__(array, nelem, item, cmpfunc, msg) ECT_FASSERT_NOT_DCONTAINS__(array, nelem, item, cmpfunc, "%s", msg)
+#define ECT_FASSERT_NOT_CONTAINS__(array, item, cmpfunc, fmt, ...) ECT_FASSERT_NOT_DCONTAINS__(array, ECT_SIZEOFARRAY__(array), item, cmpfunc, fmt, __VA_ARGS__)
+#define ECT_ASSERT_NOT_CONTAINS__(array, item, cmpfunc, msg) ECT_FASSERT_NOT_CONTAINS__(array, item, cmpfunc, "%s", ...)
+
+#define ECT_FASSERT_DCONTAINSN__(array, nelem, item, noccurence, cmpfunc, fmt, ...)\
+    do{\
+        size_t ect_ac_arrsize_ = nelem;\
+        int ect_ac_found_ = 0;\
+        for(size_t ect_ac_ind_ = 0; ect_ac_ind_ < ect_ac_arrsize_; ect_ac_ind_++){\
+            if(cmpfunc(item, array[i])){\
+                ect_ac_found_++;\
+                break;\
+            }\
+        }\
+        if(ect_ac_found_ != noccurence){\
+            ECT_FFAIL(fmt, __VA_ARGS__);\
+        }\
+    }
+#define ECT_ASSERT_DCONTAINSN__(array, nelem, item, noccurence, cmpfunc, msg) ECT_FASSERT_DCONTAINSN__(array, nelem, item, noccurence, cmpfunc, "%s", msg)
+#define ECT_FASSERT_CONTAINSN__(array, item, noccurence, cmpfunc, fmt, ...) ECT_FASSERT_DCONTAINSN__(array, ECT_SIZEOFARRAY__(array), item, noccurence, fmt, __VA_ARGS__)
+#define ECT_ASSERT_CONTAINSN__(array, item, noccurence, cmpfunc, msg) ECT_FASSERT_CONTAINSN__(array, item, noccurence, cmpfunc, "%s", msg)
+
 /*** END ASSERT ***/
 
 /*** RESULT STRUCTS AND DUMMY FUNCTIONS ***/
@@ -583,10 +831,16 @@ typedef struct ect_moduleresult{
     int skipped;
 }ect_moduleresult;
 
-typedef enum ect_caseresult{
+typedef enum ect_caseresenum__{
     ECT_CASERES_SUCCESS,
     ECT_CASERES_FAILED,
     ECT_CASERES_SKIPPED
+}ect_caseresenum__;
+
+typedef struct ect_caseresult{
+    const ect_caseresenum__ result;
+    const char *testname;
+    char *msg;
 }ect_caseresult;
 
 static inline void ect_nosetupteardown__(void){}
