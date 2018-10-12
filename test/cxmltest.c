@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ECT_ABORT_ON_FAIL
+//#define ECT_ABORT_ON_FAIL
 
 #include "ectest.h"
 
