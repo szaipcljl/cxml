@@ -824,6 +824,7 @@
 /*** END ASSERT ***/
 
 /*** RESULT STRUCTS AND DUMMY FUNCTIONS ***/
+//TODO rename to ect_moduleresult__
 typedef struct ect_moduleresult{
     int count;
     int success;
@@ -837,6 +838,7 @@ typedef enum ect_caseresenum__{
     ECT_CASERES_SKIPPED
 }ect_caseresenum__;
 
+//TODO rename to ect_caseresult__
 typedef struct ect_caseresult{
     const ect_caseresenum__ result;
     const char *testname;
